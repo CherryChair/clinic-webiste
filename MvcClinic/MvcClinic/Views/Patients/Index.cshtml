@@ -1,0 +1,68 @@
+﻿@model MvcClinic.Models.PatientSurnameViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<form asp-controller="Patients" asp-action="Index" method="get">
+    <p>
+        <select asp-for="PatientSurname" asp-items="Model.Surnames">
+            <option value="">All</option>
+        </select>
+        FirstName: <input type="text" name="SearchString" />
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Patients![0].FirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Patients![0].DateOfBirth)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Patients![0].Surname)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Patients![0].Credit)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Patients![0].Active)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Patients!) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.FirstName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateOfBirth)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Surname)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Credit)
+            </td>
+            <td>
+                    @Html.CheckBoxFor(modelItem => item.Active, new { @disabled = "disabled" })
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
