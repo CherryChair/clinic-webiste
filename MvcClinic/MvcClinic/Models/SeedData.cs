@@ -25,7 +25,6 @@ public static class SeedData
                     FirstName = "Michał",
                     DateOfBirth = DateTime.Parse("1989-2-12"),
                     Surname = "Kowalczyk",
-                    Credit = 7.99M,
                     Active = true
                 },
                 new Patient
@@ -33,7 +32,6 @@ public static class SeedData
                     FirstName = "Anna",
                     DateOfBirth = DateTime.Parse("1999-2-12"),
                     Surname = "Kowalczyk",
-                    Credit = 12.92M,
                     Active = true
                 },
                 new Patient
@@ -41,7 +39,6 @@ public static class SeedData
                     FirstName = "Joanna",
                     DateOfBirth = DateTime.Parse("2009-3-3"),
                     Surname = "Kowalczyk",
-                    Credit = 7.99M,
                     Active = true
                 },
                 new Patient
@@ -49,7 +46,6 @@ public static class SeedData
                     FirstName = "Adam",
                     DateOfBirth = DateTime.Parse("1984-3-13"),
                     Surname = "Adamski",
-                    Credit = 8.99M,
                     Active = true
                 },
                 new Patient
@@ -57,7 +53,6 @@ public static class SeedData
                     FirstName = "Jan",
                     DateOfBirth = DateTime.Parse("1986-2-23"),
                     Surname = "Janowski",
-                    Credit = 9.99M,
                     Active = true
                 },
                 new Patient
@@ -65,7 +60,6 @@ public static class SeedData
                     FirstName = "Janina",
                     DateOfBirth = DateTime.Parse("1956-12-3"),
                     Surname = "Janowski",
-                    Credit = 123.99M,
                     Active = true
                 },
                 new Patient
@@ -73,7 +67,6 @@ public static class SeedData
                     FirstName = "Alicja",
                     DateOfBirth = DateTime.Parse("1959-4-15"),
                     Surname = "Alicjańska",
-                    Credit = 3.99M,
                     Active = false
                 }
             );
