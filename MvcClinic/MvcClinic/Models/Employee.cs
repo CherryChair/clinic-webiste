@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Policy;
 
 public enum EmployeeType
 {
@@ -11,6 +13,7 @@ public enum EmployeeType
 
 namespace MvcClinic.Models
 {
+    [Index(nameof(Email), IsUnique = true)]
     public class Employee
     {
         public int Id { get; set; }
@@ -31,7 +34,7 @@ namespace MvcClinic.Models
         [DataType(DataType.Password)]
         public string Password { get; set; }
         public EmployeeType Type { get; set; }
-        public Speciality? Speciality { get; set; }
+        public Speciality? Specialization { get; set; }
         public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
     }
 }

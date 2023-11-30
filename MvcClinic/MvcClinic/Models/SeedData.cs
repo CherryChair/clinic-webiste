@@ -14,61 +14,150 @@ public static class SeedData
             serviceProvider.GetRequiredService<
                 DbContextOptions<MvcClinicContext>>()))
         {
-            // Look for any movies.
+            // Look for any patients.
             if (context.Patient.Any())
             {
                 return;   // DB has been seeded
             }
-            context.Patient.AddRange(
+            Patient[] patientsArray =
+            {
                 new Patient
                 {
                     FirstName = "Michał",
                     DateOfBirth = DateTime.Parse("1989-2-12"),
                     Surname = "Kowalczyk",
-                    Active = true
-                },
-                new Patient
-                {
-                    FirstName = "Anna",
-                    DateOfBirth = DateTime.Parse("1999-2-12"),
-                    Surname = "Kowalczyk",
-                    Active = true
-                },
-                new Patient
-                {
-                    FirstName = "Joanna",
-                    DateOfBirth = DateTime.Parse("2009-3-3"),
-                    Surname = "Kowalczyk",
-                    Active = true
-                },
-                new Patient
-                {
-                    FirstName = "Adam",
-                    DateOfBirth = DateTime.Parse("1984-3-13"),
-                    Surname = "Adamski",
-                    Active = true
-                },
-                new Patient
-                {
-                    FirstName = "Jan",
-                    DateOfBirth = DateTime.Parse("1986-2-23"),
-                    Surname = "Janowski",
-                    Active = true
-                },
-                new Patient
-                {
-                    FirstName = "Janina",
-                    DateOfBirth = DateTime.Parse("1956-12-3"),
-                    Surname = "Janowski",
-                    Active = true
+                    Active = true,
+                    Email = "mpkowalcz@wp.pl",
+                    Password = "root",
                 },
                 new Patient
                 {
                     FirstName = "Alicja",
                     DateOfBirth = DateTime.Parse("1959-4-15"),
                     Surname = "Alicjańska",
-                    Active = false
+                    Active = false,
+                    Email = "mpkowalcz2@wp.pl",
+                    Password = "root",
                 }
+            };
+            Speciality[] specialitiesArray =
+{
+                new Speciality
+                {
+                    Name = "Karidolog"
+                },
+                new Speciality
+                {
+                    Name = "Podolog"
+                },
+                new Speciality
+                {
+                    Name = "Anestezjolog"
+                }
+            };
+            Employee[] employeesArray =
+            {
+                new Employee
+                {
+                    FirstName = "Jan",
+                    DateOfBirth = DateTime.Parse("1980-4-15"),
+                    Surname = "Janowski",
+                    Email = "mpkowalcz01@wp.pl",
+                    Password = "root",
+                    Type = EmployeeType.Director
+                },
+                new Employee
+                {
+                    FirstName = "Adam",
+                    DateOfBirth = DateTime.Parse("1930-3-15"),
+                    Surname = "Adamowski",
+                    Email = "mpkowalcz02@wp.pl",
+                    Password = "root",
+                    Type = EmployeeType.Doctor,
+                    Specialization = specialitiesArray[0],
+                },
+                new Employee
+                {
+                    FirstName = "Maria",
+                    DateOfBirth = DateTime.Parse("1987-4-01"),
+                    Surname = "Mariowska",
+                    Email = "mpkowalcz03@wp.pl",
+                    Password = "root",
+                    Type = EmployeeType.Doctor,
+                    Specialization = specialitiesArray[1],
+                },
+                new Employee
+                {
+                    FirstName = "Janina",
+                    DateOfBirth = DateTime.Parse("1971-9-23"),
+                    Surname = "Janowska",
+                    Email = "mpkowalcz04@wp.pl",
+                    Password = "root",
+                    Type = EmployeeType.Doctor,
+                    Specialization = specialitiesArray[1],
+                },
+                new Employee
+                {
+                    FirstName = "Hubert",
+                    DateOfBirth = DateTime.Parse("1944-6-18"),
+                    Surname = "Hubertowski",
+                    Email = "mpkowalcz05@wp.pl",
+                    Password = "root",
+                    Type = EmployeeType.Doctor,
+                    Specialization = specialitiesArray[2],
+                },
+            };
+            Schedule[] schedulesArray = {
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 7, 12, 0, 0),
+                    Doctor = employeesArray[1]
+                },
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 7, 12, 15, 0),
+                    Doctor = employeesArray[1]
+                },
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 7, 12, 30, 0),
+                    Doctor = employeesArray[1]
+                },
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 7, 12, 45, 0),
+                    Doctor = employeesArray[1]
+                },
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 7, 14, 0, 0),
+                    Doctor = employeesArray[4],
+                    Patient = patientsArray[1]
+                },
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 7, 14, 15, 0),
+                    Doctor = employeesArray[4],
+                },
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 8, 13, 15, 0),
+                    Doctor = employeesArray[3],
+                },
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 8, 13, 30, 0),
+                    Doctor = employeesArray[3],
+                },
+                new Schedule
+                {
+                    Date = new DateTime(2023, 12, 8, 13, 45, 0),
+                    Doctor = employeesArray[3],
+                },
+            };
+            //List<Patient> patients = new List<Patient>(patientsArray);
+            context.Patient.AddRange(
+                patientsArray
             );
             context.SaveChanges();
         }
