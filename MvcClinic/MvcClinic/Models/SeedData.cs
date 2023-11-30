@@ -14,11 +14,28 @@ public static class SeedData
             serviceProvider.GetRequiredService<
                 DbContextOptions<MvcClinicContext>>()))
         {
-            // Look for any patients.
-            if (context.Patient.Any())
+            // Look for any records in database.
+            if (context.Patient.Any() || context.Employee.Any() || context.Speciality.Any() || context.Schedule.Any())
             {
                 return;   // DB has been seeded
             }
+            foreach (var patient in context.Patient)
+            {
+                context.Patient.Remove(patient);
+            }
+            foreach (var employee in context.Employee)
+            {
+                context.Employee.Remove(employee);
+            }
+            foreach (var speciality in context.Speciality)
+            {
+                context.Speciality.Remove(speciality);
+            }
+            foreach (var schedule in context.Schedule)
+            {
+                context.Schedule.Remove(schedule);
+            }
+            //context.SaveChanges();
             Patient[] patientsArray =
             {
                 new Patient
