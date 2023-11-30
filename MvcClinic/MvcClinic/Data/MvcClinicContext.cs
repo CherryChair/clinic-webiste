@@ -15,5 +15,8 @@ namespace MvcClinic.Data
         }
 
         public DbSet<MvcClinic.Models.Patient> Patient { get; set; } = default!;
+        public DbSet<MvcClinic.Models.Employee> Employee { get; set; } = default!;
+        public DbSet<MvcClinic.Models.Speciality> Speciality { get; set; } = default!;
+        public DbSet<MvcClinic.Models.Schedule> Schedule { get; set; } = default!;
     }
 }

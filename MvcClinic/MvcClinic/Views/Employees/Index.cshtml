@@ -1,4 +1,4 @@
-﻿@model MvcClinic.Models.PatientSurnameViewModel
+﻿@model IEnumerable<MvcClinic.Models.Employee>
 
 @{
     ViewData["Title"] = "Index";
@@ -9,47 +9,50 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<form asp-controller="Patients" asp-action="Index" method="get">
-    <p>
-        <select asp-for="PatientSurname" asp-items="Model.Surnames">
-            <option value="">All</option>
-        </select>
-        FirstName: <input type="text" name="SearchString" />
-        <input type="submit" value="Filter" />
-    </p>
-</form>
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Patients![0].FirstName)
+                @Html.DisplayNameFor(model => model.FirstName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Patients![0].DateOfBirth)
+                @Html.DisplayNameFor(model => model.Surname)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Patients![0].Surname)
+                @Html.DisplayNameFor(model => model.DateOfBirth)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Patients![0].Active)
+                @Html.DisplayNameFor(model => model.Email)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Password)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Type)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Patients!) {
+@foreach (var item in Model) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.FirstName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.DateOfBirth)
-            </td>
-            <td>
                 @Html.DisplayFor(modelItem => item.Surname)
             </td>
             <td>
-                    @Html.CheckBoxFor(modelItem => item.Active, new { @disabled = "disabled" })
+                @Html.DisplayFor(modelItem => item.DateOfBirth)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Password)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Type)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
