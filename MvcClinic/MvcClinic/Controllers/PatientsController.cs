@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -24,7 +26,7 @@ namespace MvcClinic.Controllers
         {
             if (_context.Patient == null)
             {
-                return Problem("Entity set 'MvcMovieContext.Movie'  is null.");
+                return Problem("Entity set 'MvcClinicContext.Clinic' is null.");
             }
 
             // Use LINQ to get list of surnames.
@@ -75,6 +77,59 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
+            return View(patient);
+        }
+
+        public string HashPassword(string password)
+        {
+            return Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(password)));
+        }
+
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        // POST: Patients/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login([Bind("Email,Password")] PatientLoginData patientLoginData)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(patientLoginData);
+            }
+
+            var patient = await _context.Patient
+                .FirstOrDefaultAsync(m => (m.Email == patientLoginData.Email) && (m.Password == HashPassword(patientLoginData.Password)));
+            if (patient == null)
+            {
+                return View(patientLoginData);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        // POST: Patients/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register([Bind("Id,FirstName,DateOfBirth,Surname,Email,Password")] Patient patient)
+        {
+            if (ModelState.IsValid)
+            {
+                patient.Password = HashPassword(patient.Password);
+                _context.Add(patient);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Login));
+            }
             return View(patient);
         }
 

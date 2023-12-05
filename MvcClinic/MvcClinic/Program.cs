@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using MvcClinic.Data;
 using MvcClinic.Models;
@@ -6,6 +7,7 @@ using MvcClinic.Models;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<MvcClinicContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MvcClinicContext") ?? throw new InvalidOperationException("Connection string 'MvcClinicContext' not found.")));
+builder.Services.Ad
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

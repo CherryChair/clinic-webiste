@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Policy;
@@ -10,11 +11,13 @@ namespace MvcClinic.Models
     {
         public int Id { get; set; }
         [StringLength(60, MinimumLength = 1)]
+        [Display(Name = "First Name")]
         [Required]
         public string? FirstName { get; set; }
         [Required]
         [StringLength(30)]
         public string? Surname { get; set; }
+        [Required]
         [Display(Name = "Date Of Birth")]
         [DataType(DataType.Date)]
         public DateTime? DateOfBirth { get; set; }
@@ -23,6 +26,8 @@ namespace MvcClinic.Models
         [Required]
         [EmailAddress]
         public string? Email { get; set; }
+        [Required]
+        [DataType(DataType.Password)]
         public string? Password { get; set; }
         public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
     }
