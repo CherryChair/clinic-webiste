@@ -15,7 +15,7 @@ public enum EmployeeType
 namespace MvcClinic.Models
 {
     [Index(nameof(Email), IsUnique = true)]
-    public class Employee : Account
+    public class Employee : UserAccount
     {
         public EmployeeType Type { get; set; }
         public Speciality? Specialization { get; set; }

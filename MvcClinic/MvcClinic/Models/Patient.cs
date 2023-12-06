@@ -7,7 +7,7 @@ using System.Security.Policy;
 namespace MvcClinic.Models
 {
     [Index(nameof(Email), IsUnique = true)]
-    public class Patient : Account
+    public class Patient : UserAccount
     {
         [Required]
         public bool Active { get; set; } = false;

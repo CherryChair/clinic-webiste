@@ -8,8 +8,15 @@ using MvcClinic.Models;
 
 namespace MvcClinic.Data
 {
-    public class MvcClinicContext : IdentityDbContext<Account>
+    public class MvcClinicContext : IdentityDbContext<UserAccount>
     {
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            builder.Entity<UserAccount>(entity => { entity.ToTable("UserAccounts"); });
+            builder.Entity<Employee>(entity => { entity.ToTable("Employees"); });
+            builder.Entity<Patient>(entity => { entity.ToTable("Patients"); });
+        }
         public MvcClinicContext (DbContextOptions<MvcClinicContext> options)
             : base(options)
         {

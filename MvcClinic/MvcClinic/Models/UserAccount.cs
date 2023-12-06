@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MvcClinic.Models
 {
-    public class Account : IdentityUser
+    public class UserAccount : IdentityUser
     {
         [StringLength(60, MinimumLength = 1)]
         [Required]
