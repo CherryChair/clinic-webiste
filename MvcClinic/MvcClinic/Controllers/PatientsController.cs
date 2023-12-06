@@ -63,7 +63,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Patients/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(string? id)
         {
             if (id == null)
             {
@@ -103,7 +103,7 @@ namespace MvcClinic.Controllers
             }
 
             var patient = await _context.Patient
-                .FirstOrDefaultAsync(m => (m.Email == patientLoginData.Email) && (m.Password == HashPassword(patientLoginData.Password)));
+                .FirstOrDefaultAsync(m => (m.Email == patientLoginData.Email) && (m.PasswordHash == HashPassword(patientLoginData.Password)));
             if (patient == null)
             {
                 return View(patientLoginData);
@@ -121,11 +121,11 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register([Bind("Id,FirstName,DateOfBirth,Surname,Email,Password")] Patient patient)
+        public async Task<IActionResult> Register([Bind("Id,FirstName,DateOfBirth,Surname,Email,PasswordHash")] Patient patient)
         {
             if (ModelState.IsValid)
             {
-                patient.Password = HashPassword(patient.Password);
+                patient.PasswordHash = HashPassword(patient.PasswordHash);
                 _context.Add(patient);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Login));
@@ -176,7 +176,7 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,DateOfBirth,Surname,Credit,Active")] Patient patient)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,DateOfBirth,Surname,Credit,Active")] Patient patient)
         {
             if (id != patient.Id)
             {
@@ -207,7 +207,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Patients/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(string? id)
         {
             if (id == null)
             {
@@ -227,7 +227,7 @@ namespace MvcClinic.Controllers
         // POST: Patients/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var patient = await _context.Patient.FindAsync(id);
             if (patient != null)
@@ -239,7 +239,7 @@ namespace MvcClinic.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool PatientExists(int id)
+        private bool PatientExists(string id)
         {
             return _context.Patient.Any(e => e.Id == id);
         }

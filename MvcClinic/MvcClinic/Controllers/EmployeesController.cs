@@ -26,7 +26,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Employees/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(string? id)
         {
             if (id == null)
             {
@@ -86,7 +86,7 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,Surname,DateOfBirth,Email,Password,Type")] Employee employee)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,DateOfBirth,Email,Password,Type")] Employee employee)
         {
             if (id != employee.Id)
             {
@@ -117,7 +117,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Employees/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(string? id)
         {
             if (id == null)
             {
@@ -137,7 +137,7 @@ namespace MvcClinic.Controllers
         // POST: Employees/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var employee = await _context.Employee.FindAsync(id);
             if (employee != null)
@@ -149,7 +149,7 @@ namespace MvcClinic.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool EmployeeExists(int id)
+        private bool EmployeeExists(string id)
         {
             return _context.Employee.Any(e => e.Id == id);
         }

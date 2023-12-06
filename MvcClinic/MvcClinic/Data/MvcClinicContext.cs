@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MvcClinic.Models;
 
 namespace MvcClinic.Data
 {
-    public class MvcClinicContext : DbContext
+    public class MvcClinicContext : IdentityDbContext<Account>
     {
         public MvcClinicContext (DbContextOptions<MvcClinicContext> options)
             : base(options)
