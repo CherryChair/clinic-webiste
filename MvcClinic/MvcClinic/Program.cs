@@ -8,13 +8,46 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<MvcClinicContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MvcClinicContext") ?? throw new InvalidOperationException("Connection string 'MvcClinicContext' not found.")));
 
-builder.Services.AddDefaultIdentity<UserAccount>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<MvcClinicContext>();
 
-builder.Services.AddIdentityCore<Employee>().AddEntityFrameworkStores<MvcClinicContext>();
-builder.Services.AddIdentityCore<Patient>().AddEntityFrameworkStores<MvcClinicContext>();
+builder.Services.AddDefaultIdentity<UserAccount>(options => {
+    options.SignIn.RequireConfirmedAccount = false;
+
+    options.Password.RequireDigit = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequiredLength = 4;
+}).AddEntityFrameworkStores<MvcClinicContext>();
+
+builder.Services.AddIdentityCore<Employee>(options => {
+    options.SignIn.RequireConfirmedAccount = false;
+
+    options.Password.RequireDigit = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequiredLength = 4;
+}).AddEntityFrameworkStores<MvcClinicContext>().AddSignInManager().AddDefaultTokenProviders();
+
+builder.Services.AddIdentityCore<Patient>(options => {
+    options.SignIn.RequireConfirmedAccount = false;
+
+    options.Password.RequireDigit = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequiredLength = 4;
+}).AddEntityFrameworkStores<MvcClinicContext>().AddSignInManager().AddDefaultTokenProviders();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("DoctorOnly", policy => policy.RequireClaim("IsDoctor", "IsAdmin"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("IsAdmin"));
+    options.AddPolicy("PatientOnly", policy => policy.RequireClaim("IsPatient"));
+});
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 
 var app = builder.Build();
 
@@ -38,10 +71,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapRazorPages();
 
 app.Run();

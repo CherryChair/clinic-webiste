@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using MvcClinic.Models;
 
 namespace MvcClinic.Controllers
 {
+    [Authorize]
     public class PatientsController : Controller
     {
         private readonly MvcClinicContext _context;
