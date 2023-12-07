@@ -67,7 +67,6 @@ namespace MvcClinic.Areas.Identity.Pages.Account
         /// </summary>
         public string ReturnUrl { get; set; }
         public SelectList Specialities { get; set; }
-        public string? Specialitiy { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
