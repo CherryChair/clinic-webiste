@@ -5,11 +5,13 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MvcClinic.Data;
 using MvcClinic.Models;
+using NuGet.Protocol;
 
 namespace MvcClinic.Controllers
 {
@@ -17,10 +19,12 @@ namespace MvcClinic.Controllers
     public class PatientsController : Controller
     {
         private readonly MvcClinicContext _context;
+        private readonly UserManager<Patient> _patientManager;
 
-        public PatientsController(MvcClinicContext context)
+        public PatientsController(MvcClinicContext context, UserManager<Patient> patientManager)
         {
             _context = context;
+            _patientManager = patientManager;
         }
 
         // GET: Patients
@@ -82,95 +86,22 @@ namespace MvcClinic.Controllers
             return View(patient);
         }
 
-        public string HashPassword(string password)
-        {
-            return Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(password)));
-        }
-
-        public IActionResult Login()
-        {
-            return View();
-        }
-
-        // POST: Patients/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login([Bind("Email,Password")] PatientLoginData patientLoginData)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(patientLoginData);
-            }
-
-            var patient = await _context.Patient
-                .FirstOrDefaultAsync(m => (m.Email == patientLoginData.Email) && (m.PasswordHash == HashPassword(patientLoginData.Password)));
-            if (patient == null)
-            {
-                return View(patientLoginData);
-            }
-            return RedirectToAction(nameof(Index));
-        }
-
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        // POST: Patients/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register([Bind("Id,FirstName,DateOfBirth,Surname,Email,PasswordHash")] Patient patient)
-        {
-            if (ModelState.IsValid)
-            {
-                patient.PasswordHash = HashPassword(patient.PasswordHash);
-                _context.Add(patient);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Login));
-            }
-            return View(patient);
-        }
-
-        // GET: Patients/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Patients/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,DateOfBirth,Surname,Credit,Active")] Patient patient)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(patient);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(patient);
-        }
-
         // GET: Patients/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Edit(string? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var patient = await _context.Patient.FindAsync(id);
+            var patient = await _context.Patient
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (patient == null)
             {
                 return NotFound();
             }
-            return View(patient);
+            return View(new PatientEditModel{ Id = patient.Id, FirstName = patient.FirstName, Surname=patient.Surname, Active=patient.Active});
         }
 
         // POST: Patients/Edit/5
@@ -178,12 +109,28 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,DateOfBirth,Surname,Credit,Active")] Patient patient)
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active")] PatientEditModel patientEditModel)
         {
-            if (id != patient.Id)
+            var newFirstName = patientEditModel.FirstName;
+            var newSurname = patientEditModel.Surname;
+            var newActive = patientEditModel.Active;
+
+            if (id != patientEditModel.Id || id == null)
             {
                 return NotFound();
             }
+
+            var patient = await _context.Patient.FindAsync(id);
+
+            if (patient == null)
+            {
+                return NotFound();
+            }
+
+            patient.FirstName = newFirstName;
+            patient.Surname = newSurname;
+            patient.Active = newActive;
 
             if (ModelState.IsValid)
             {
@@ -209,6 +156,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Patients/Delete/5
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(string? id)
         {
             if (id == null)
@@ -229,6 +177,7 @@ namespace MvcClinic.Controllers
         // POST: Patients/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var patient = await _context.Patient.FindAsync(id);

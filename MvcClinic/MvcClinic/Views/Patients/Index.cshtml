@@ -1,4 +1,7 @@
 ﻿@model MvcClinic.Models.PatientSurnameViewModel
+@using Microsoft.AspNetCore.Authorization
+
+@inject IAuthorizationService AuthorizationService
 
 @{
     ViewData["Title"] = "Index";
@@ -6,15 +9,12 @@
 
 <h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <form asp-controller="Patients" asp-action="Index" method="get">
     <p>
         <select asp-for="PatientSurname" asp-items="Model.Surnames">
             <option value="">All</option>
         </select>
-        FirstName: <input type="text" name="SearchString" />
+        @Html.DisplayNameFor(model => model.Patients![0].FirstName): <input type="text" name="SearchString" />
         <input type="submit" value="Filter" />
     </p>
 </form>
@@ -26,6 +26,9 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Patients![0].Surname)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Patients![0].Email)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Patients![0].Active)
@@ -43,12 +46,29 @@
                 @Html.DisplayFor(modelItem => item.Surname)
             </td>
             <td>
-                    @Html.CheckBoxFor(modelItem => item.Active, new { @disabled = "disabled" })
+                @Html.DisplayFor(modelItem => item.Email)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @if (!item.Active)
+                {
+                        <p>&#10060;</p>
+                } else
+                {
+                        <p>&#10004;</p>
+                }
+            </td>
+            <td>
+                @if ((await AuthorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded)
+                {
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <text>|</text>
+                }
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                @if ((await AuthorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded)
+                {
+                    <text>|</text>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
             </td>
         </tr>
 }

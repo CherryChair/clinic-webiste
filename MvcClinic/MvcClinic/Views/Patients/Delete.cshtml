@@ -27,7 +27,14 @@
             @Html.DisplayNameFor(model => model.Active)
         </dt>
         <dd class="col-sm-10">
-            @Html.CheckBoxFor(model => model.Active, new { @disabled = "disabled" })
+            @if (!Model.Active)
+            {
+                <p>&#10060;</p>
+            }
+            else
+            {
+                <p>&#10004;</p>
+            }
         </dd>
     </dl>
     

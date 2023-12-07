@@ -42,8 +42,13 @@ builder.Services.AddIdentityCore<Patient>(options => {
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("DoctorOnly", policy => policy.RequireAssertion(context => context.User.HasClaim(claim => (claim.Type == "IsAdmin" || claim.Type == "IsDoctor"))));
+    options.AddPolicy("DoctorOnly", policy => policy.RequireAssertion(context => (
+         context.User.HasClaim(claim => (claim.Type == "IsAdmin" || claim.Type == "IsDoctor")
+         )
+    )));
     options.AddPolicy("AdminOnly", policy => policy.RequireClaim("IsAdmin"));
     options.AddPolicy("PatientOnly", policy => policy.RequireClaim("IsPatient"));
+    options.AddPolicy("ActivePatientOnly", policy => policy.RequireClaim("IsAcitvePatient"));
 });
 
 // Add services to the container.
