@@ -23,6 +23,7 @@ using MvcClinic.Models;
 
 namespace MvcClinic.Areas.Identity.Pages.Account
 {
+    [Authorize(Policy = "AdminOnly")]
     public class RegisterEmployeeModel : PageModel
     {
         private readonly SignInManager<Employee> _signInManager;
@@ -77,6 +78,16 @@ namespace MvcClinic.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Required]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 1)]
+            [Display(Name = "First Name")]
+            public string FirstName { get; set; }
+
+            [Required]
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 1)]
+            [Display(Name = "Surname")]
+            public string Surname { get; set; }
+
+            [Required]
             [EmailAddress]
             [Display(Name = "Email")]
             public string Email { get; set; }
@@ -116,14 +127,17 @@ namespace MvcClinic.Areas.Identity.Pages.Account
             {
                 var user = CreateUser();
 
+                user.FirstName = Input.FirstName;
+                user.Surname = Input.Surname;
+
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                await _userManager.AddClaimAsync(user, new Claim("IsDoctor", "true"));
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
+                    await _userManager.AddClaimAsync(user, new Claim("IsDoctor", "true"));
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -143,7 +157,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
                     }
                     else
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        //TODO REDIRECT NA SUKCES
                         return LocalRedirect(returnUrl);
                     }
                 }

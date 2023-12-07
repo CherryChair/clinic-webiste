@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using MvcClinic.Models;
 
 namespace MvcClinic.Controllers
 {
+    [Authorize(Policy = "DoctorOnly")]
     public class SpecialitiesController : Controller
     {
         private readonly MvcClinicContext _context;

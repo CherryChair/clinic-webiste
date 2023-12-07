@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,19 +12,34 @@ using MvcClinic.Models;
 
 namespace MvcClinic.Controllers
 {
+    [Authorize]
     public class SchedulesController : Controller
     {
         private readonly MvcClinicContext _context;
 
-        public SchedulesController(MvcClinicContext context)
+        private readonly UserManager<Employee> _employeeManager;
+        private readonly UserManager<Patient> _patientManager;
+
+        public SchedulesController(MvcClinicContext context, UserManager<Employee> employeeManager, UserManager<Patient> patientManager)
         {
             _context = context;
+            _employeeManager = employeeManager;
+            _patientManager = patientManager;
         }
 
         // GET: Schedules
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Schedule.ToListAsync());
+            var patient = await _patientManager.GetUserAsync(User);
+            if (patient == null)
+            {
+                return View(await _context.Schedule.ToListAsync());
+            }
+            else
+            {
+                //TODO STRONA Z BRAKIEM DOSTĘPU DLA NIEAKTYWNYCH
+                return RedirectToAction("Index", "Home");
+            }
         }
 
         // GET: Schedules/Details/5
