@@ -17,8 +17,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MvcClinic.Data;
 using MvcClinic.Models;
 
 namespace MvcClinic.Areas.Identity.Pages.Account
@@ -28,6 +31,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<Employee> _signInManager;
         private readonly UserManager<Employee> _userManager;
+        private readonly MvcClinicContext _context;
         private readonly IUserStore<Employee> _userStore;
         private readonly IUserEmailStore<Employee> _emailStore;
         private readonly ILogger<RegisterEmployeeModel> _logger;
@@ -35,12 +39,14 @@ namespace MvcClinic.Areas.Identity.Pages.Account
 
         public RegisterEmployeeModel(
             UserManager<Employee> userManager,
+            MvcClinicContext context,
             IUserStore<Employee> userStore,
             SignInManager<Employee> signInManager,
             ILogger<RegisterEmployeeModel> logger,
             IEmailSender emailSender)
         {
             _userManager = userManager;
+            _context = context;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
@@ -60,6 +66,8 @@ namespace MvcClinic.Areas.Identity.Pages.Account
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
         public string ReturnUrl { get; set; }
+        public SelectList Specialities { get; set; }
+        public string? Specialitiy { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -110,6 +118,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+            public string? Speciality { get; set; }
         }
 
 
@@ -117,6 +126,9 @@ namespace MvcClinic.Areas.Identity.Pages.Account
         {
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            IQueryable<string> specialityQuery = from p in _context.Speciality
+                                              select p.Name;
+            Specialities = new SelectList(await specialityQuery.Distinct().ToListAsync());
         }
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -129,6 +141,11 @@ namespace MvcClinic.Areas.Identity.Pages.Account
 
                 user.FirstName = Input.FirstName;
                 user.Surname = Input.Surname;
+                var spec = await _context.Speciality.FirstOrDefaultAsync(m => m.Name.Equals(Input.Speciality));
+
+                if (spec != null) {
+                    user.Specialization = spec;
+                }
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);

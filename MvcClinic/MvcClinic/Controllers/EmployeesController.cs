@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using MvcClinic.Models;
 
 namespace MvcClinic.Controllers
 {
+    [Authorize(Policy = "AdminOnly")]
     public class EmployeesController : Controller
     {
         private readonly MvcClinicContext _context;
@@ -86,7 +88,7 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,DateOfBirth,Email,Password,Type")] Employee employee)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Email,Specialization")] Employee employee)
         {
             if (id != employee.Id)
             {
