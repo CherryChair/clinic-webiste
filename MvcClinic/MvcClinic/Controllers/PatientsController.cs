@@ -101,7 +101,7 @@ namespace MvcClinic.Controllers
             {
                 return NotFound();
             }
-            return View(new PatientEditModel{ Id = patient.Id, FirstName = patient.FirstName, Surname=patient.Surname, Active=patient.Active});
+            return View(new PatientEditViewModel{ Id = patient.Id, FirstName = patient.FirstName, Surname=patient.Surname, Active=patient.Active});
         }
 
         // POST: Patients/Edit/5
@@ -110,7 +110,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active")] PatientEditModel patientEditModel)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active")] PatientEditViewModel patientEditModel)
         {
             var newFirstName = patientEditModel.FirstName;
             var newSurname = patientEditModel.Surname;

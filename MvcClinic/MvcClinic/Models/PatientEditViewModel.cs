@@ -6,7 +6,7 @@ using System.Security.Policy;
 
 namespace MvcClinic.Models
 {
-    public class PatientEditModel
+    public class PatientEditViewModel
     {
         public string? Id { get; set; }
         [StringLength(60, MinimumLength = 1)]
