@@ -9,8 +9,16 @@
 {
     <p>
         <a asp-action="Create">Create New</a>
-    </p>    
+        <a asp-action="CopyFromLastWeek" class="mx-lg-3">Copy Schedule From Last Week</a>
+    </p>
 }
+<form asp-controller="Schedules" asp-action="Index" method="get">
+    <p>
+        <label asp-for="DateFrom"></label>: <input asp-for="DateFrom" />
+        <label asp-for="DateTo"></label>: <input asp-for="DateTo" />
+        <input type="submit" value="Filter" />
+    </p>
+</form>
 <table class="table">
     <thead>
         <tr>
@@ -84,10 +92,16 @@
             <td>
                 @if (Model.isPatient)
                 {
-                    @* <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> *@
                         <form asp-controller="Schedules" asp-action="Book" asp-route-id="@item.Id" method="post">
                             <p>
-                                <input type="submit" value="Book" />
+                                <input type="hidden" name="dateFrom" value="@Model.DateFrom" />
+                                <input type="hidden" name="dateTo" value="@Model.DateTo" />
+                                @if(item.Patient == null){
+                                    <input type="submit" value="Book" />
+                                } else
+                                {
+                                    <input type="submit" value="Cancel" />
+                                }
                             </p>
                         </form>
                 }

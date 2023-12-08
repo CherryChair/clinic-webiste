@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using MvcClinic.Data;
 using MvcClinic.Models;
 using NuGet.Protocol;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MvcClinic.Controllers
 {
@@ -33,16 +34,16 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Schedules
-        public async Task<IActionResult> Index(string? filter, DateTime? dateFrom, DateTime? dateTo)
+        public async Task<IActionResult> Index(DateTime? DateFrom, DateTime? DateTo)
         {
-            if (dateFrom == null)
+            if (DateFrom == null)
             {
                 DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
-                dateFrom = startOfWeek;
+                DateFrom = startOfWeek;
             }
-            if (dateTo == null)
+            if (DateTo == null)
             {
-                dateTo = dateFrom.Value.AddDays(7);
+                DateTo = DateFrom.Value.AddDays(7);
             }
 
             bool isAdmin = false;
@@ -73,7 +74,8 @@ namespace MvcClinic.Controllers
                 }
                 schedules = await _context.Schedule.Include(s => s.Doctor)
                     .Include(s => s.Doctor.Specialization).Include(s => s.Patient)
-                    .Where(s => (dateFrom <= s.Date && s.Date <= dateTo))
+                    .Where(s => (DateFrom <= s.Date && s.Date <= DateTo))
+                    .Where(s => (s.Patient == patient) || (s.Patient == null))
                     .OrderBy(s => s.Date).ToListAsync();
             }
 
@@ -81,7 +83,7 @@ namespace MvcClinic.Controllers
             {
                 var doctor = await _employeeManager.GetUserAsync(User);
                 schedules = await _context.Schedule.Include(s => s.Patient)
-                    .Where(s => (dateFrom <= s.Date && s.Date <= dateTo))
+                    .Where(s => (DateFrom <= s.Date && s.Date <= DateTo))
                     .Where(s => s.Doctor == doctor).OrderBy(s => s.Date).ToListAsync();
             }
 
@@ -90,7 +92,7 @@ namespace MvcClinic.Controllers
                 schedules = await _context.Schedule.Include(s => s.Doctor)
                     .Include(s => s.Doctor.Specialization)
                     .Include(s => s.Patient)
-                    .Where(s => (dateFrom <= s.Date && s.Date <= dateTo))
+                    .Where(s => (DateFrom <= s.Date && s.Date <= DateTo))
                     .OrderBy(s => s.Date).ToListAsync();
             }
             
@@ -99,8 +101,78 @@ namespace MvcClinic.Controllers
                 isAdmin = isAdmin,
                 isDoctor = isDoctor,
                 isPatient = isPatient,
-                Schedules = schedules
+                Schedules = schedules,
+                DateFrom = DateFrom,
+                DateTo = DateTo
             });
+        }
+
+        [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> CopyFromLastWeek()
+        {
+            DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
+            DateTime endOfWeek = startOfWeek.AddDays(7);
+            DateTime endOfNextWeek = startOfWeek.AddDays(14);
+
+            var oldSchedules = await _context.Schedule.Include(s => s.Doctor)
+                .Include(s => s.Doctor.Specialization)
+                .Where(s => (endOfWeek <= s.Date && s.Date <= endOfNextWeek))
+                .OrderBy(s => s.Date).ToListAsync();
+
+            var newSchedules = await _context.Schedule.Include(s => s.Doctor)
+                .Include(s => s.Doctor.Specialization)
+                .Where(s => (startOfWeek <= s.Date && s.Date <= endOfWeek))
+                .OrderBy(s => s.Date).ToListAsync();
+
+            newSchedules.ForEach(el => el.Date = el.Date.AddDays(7));
+
+            var combinedSchedules = oldSchedules.Concat(newSchedules).OrderBy(el => el.Date).ToList();
+
+
+            return View(new ScheduleCopyListViewModel
+            {
+                OldSchedules = oldSchedules,
+                NewSchedules = newSchedules,
+                CombinedSchedules = combinedSchedules,
+                DateFrom = endOfWeek,
+                DateTo = endOfNextWeek
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> CopyFromLastWeek(bool? dummy)
+        {
+            DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
+            DateTime endOfWeek = startOfWeek.AddDays(7);
+            DateTime endOfNextWeek = startOfWeek.AddDays(14);
+
+            var oldSchedules = await _context.Schedule.Include(s => s.Doctor)
+                .Include(s => s.Doctor.Specialization)
+                .Include(s => s.Patient)
+                .Where(s => (endOfWeek <= s.Date && s.Date <= endOfNextWeek))
+                .OrderBy(s => s.Date).ToListAsync();
+
+            var newSchedules = await _context.Schedule
+                .Include(s => s.Doctor)
+                .Include(s => s.Doctor.Specialization)
+                .Where(s => (startOfWeek <= s.Date && s.Date <= endOfWeek))
+                .OrderBy(s => s.Date).ToListAsync();
+
+
+            newSchedules.ForEach(el => { 
+                _context.Entry(el).State = EntityState.Detached;
+                el.Date = el.Date.AddDays(7); 
+                el.Id = 0;
+                el.Patient = null;
+            });
+
+            await _context.AddRangeAsync(newSchedules);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = startOfWeek, DateTo = endOfWeek});
         }
 
         // GET: Schedules/Create
@@ -123,7 +195,7 @@ namespace MvcClinic.Controllers
                 return BadRequest();
             }
             Schedule schedule = new Schedule { Date=(DateTime) scheduleCreateViewModel.Date};
-            if (!String.IsNullOrEmpty(scheduleCreateViewModel.DoctorId))
+            if (!System.String.IsNullOrEmpty(scheduleCreateViewModel.DoctorId))
             {
                 var doctor = await _context.Employee.FindAsync(scheduleCreateViewModel.DoctorId);
                 if (doctor == null)
@@ -233,7 +305,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "PatientOnly")]
-        public async Task<IActionResult> Book(int id)
+        public async Task<IActionResult> Book(int id, DateTime dateFrom, DateTime dateTo)
         {
             var schedule = await _context.Schedule.Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == id);
 
@@ -245,15 +317,12 @@ namespace MvcClinic.Controllers
             var patient = await _patientManager.GetUserAsync(User);
             if (schedule.Patient == null)
             {
-                Console.WriteLine("!!!!!!!!!!!!!!!!!!!");
                 schedule.Patient = patient;
-            } else if (schedule.Patient != patient)
+            } else if (schedule.Patient == patient)
             {
-                Console.WriteLine("??????????????????");
                 schedule.Patient = null;
             } else
             {
-                Console.WriteLine("*@)(#*)!(@#*)#(!*)");
                 return Unauthorized();
             }
 
@@ -276,7 +345,7 @@ namespace MvcClinic.Controllers
                     }
                 }
             }
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = dateFrom, DateTo=dateTo});
         }
 
         // GET: Schedules/Delete/5

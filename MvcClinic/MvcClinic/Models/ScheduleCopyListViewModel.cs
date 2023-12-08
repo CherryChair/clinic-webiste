@@ -3,23 +3,20 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MvcClinic.Models
 {
-    public class ScheduleListViewModel
+    public class ScheduleCopyListViewModel
     {
-        public bool isAdmin {  get; set; }=false;
-        public bool isDoctor {  get; set; }=false;
-        public bool isPatient {  get; set; }=false;
-        public List<Schedule>? Schedules { get; set;}
-        [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy HH:mm}")]
+        public List<Schedule>? OldSchedules { get; set; }
+        public List<Schedule>? NewSchedules { get; set; }
+        public List<Schedule>? CombinedSchedules { get; set; }
+        [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}")]
         [DataType(DataType.DateTime)]
         [DisplayName("Date To")]
         [Required]
         public DateTime? DateTo { get; set; }
-        [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy HH:mm}")]
+        [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}")]
         [DataType(DataType.DateTime)]
         [DisplayName("Date From")]
         [Required]
         public DateTime? DateFrom { get; set; }
-
-
     }
 }
