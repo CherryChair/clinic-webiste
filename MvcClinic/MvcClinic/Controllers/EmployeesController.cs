@@ -24,7 +24,7 @@ namespace MvcClinic.Controllers
         // GET: Employees
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Employee.ToListAsync());
+            return View(await _context.Employee.Include(e => e.Specialization).ToListAsync());
         }
 
         // GET: Employees/Details/5
@@ -35,7 +35,7 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
-            var employee = await _context.Employee
+            var employee = await _context.Employee.Include(e => e.Specialization)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (employee == null)
             {
@@ -45,42 +45,36 @@ namespace MvcClinic.Controllers
             return View(employee);
         }
 
-        // GET: Employees/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Employees/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,Surname,DateOfBirth,Email,Password,Type")] Employee employee)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(employee);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(employee);
-        }
-
         // GET: Employees/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(string? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
+            IQueryable<string> specialityQuery = from p in _context.Speciality
+                                                 select p.Name;
+            var specialities = new SelectList(await specialityQuery.Distinct().ToListAsync());
 
-            var employee = await _context.Employee.FindAsync(id);
+            var employee = await _context.Employee.Include(e => e.Specialization)
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (employee == null)
             {
                 return NotFound();
             }
-            return View(employee);
+
+            string? spec = "";
+            if (employee.Specialization != null)
+            {
+                spec = employee.Specialization.Name!;
+            }
+            return View(new EmployeeEditViewModel { 
+                Id=employee.Id,
+                FirstName=employee.FirstName,
+                Surname=employee.Surname,
+                Speciality=spec,
+                Specialities=specialities
+            });
         }
 
         // POST: Employees/Edit/5
@@ -88,11 +82,28 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Email,Specialization")] Employee employee)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality")] EmployeeEditViewModel employeeEditViewModel)
         {
-            if (id != employee.Id)
+            if (id != employeeEditViewModel.Id)
             {
                 return NotFound();
+            }
+
+            var employee = await _context.Employee.Include(m => m.Specialization).FirstOrDefaultAsync(m => m.Id == id);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            employee.FirstName = employeeEditViewModel.FirstName;
+            employee.Surname = employeeEditViewModel.Surname;
+
+            var spec = await _context.Speciality.FirstOrDefaultAsync(m => m.Name == employeeEditViewModel.Speciality);
+
+            if (spec != null)
+            {
+                employee.Specialization = spec;
             }
 
             if (ModelState.IsValid)
@@ -126,7 +137,7 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
-            var employee = await _context.Employee
+            var employee = await _context.Employee.Include(e => e.Specialization)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (employee == null)
             {
