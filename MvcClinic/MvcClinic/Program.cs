@@ -41,7 +41,6 @@ builder.Services.AddIdentityCore<Patient>(options => {
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminAndPatientOnly", policy => policy.RequireAssertion(context => context.User.HasClaim(claim => (claim.Type == "IsAdmin" || claim.Type == "IsPatient"))));
     options.AddPolicy("DoctorOnly", policy => policy.RequireAssertion(context => (
          context.User.HasClaim(claim => (claim.Type == "IsAdmin" || claim.Type == "IsDoctor")
          )
