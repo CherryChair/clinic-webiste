@@ -171,7 +171,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
                     }
                     else
                     {
-                        //TODO REDIRECT NA SUKCES
+                        TempData["Success"] = "Success";
                         return RedirectToAction("Index", "Employees");
                     }
                 }

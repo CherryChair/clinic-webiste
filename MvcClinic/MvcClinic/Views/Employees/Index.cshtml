@@ -5,6 +5,10 @@
 }
 
 <h1>Index</h1>
+@if (TempData["Success"] != null)
+{
+    <h5 class="text-success">Successfully added employee.</h5>
+}
 
 <table class="table">
     <thead>
