@@ -24,7 +24,7 @@ namespace MvcClinic.Controllers
         // GET: Employees
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Employee.Include(e => e.Specialization).ToListAsync());
+            return View(await _context.Employee.Include(e => e.Specialization).OrderBy(e => e.Surname).ToListAsync());
         }
 
         // GET: Employees/Details/5

@@ -17,6 +17,32 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Date)
         </dd>
+        @if (Model.Patient != null)
+        {
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Patient)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Patient.FirstName) @Html.DisplayFor(model => model.Patient.Surname) [@Html.DisplayFor(model => model.Patient.Email)]
+            </dd>
+        }
+        @if (Model.Doctor != null)
+        {
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Doctor)
+            </dt>
+            @if (Model.Doctor.Specialization != null)
+            {
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Doctor.FirstName) @Html.DisplayFor(model => model.Doctor.Surname) [@Html.DisplayFor(model => model.Doctor.Specialization.Name)]
+                </dd>
+            } else
+            {
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Doctor.FirstName) @Html.DisplayFor(model => model.Doctor.Surname)
+                </dd>
+            }
+        }
     </dl>
     
     <form asp-action="Delete">

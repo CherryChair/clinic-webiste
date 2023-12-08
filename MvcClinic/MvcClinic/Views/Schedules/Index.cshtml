@@ -1,33 +1,101 @@
-﻿@model IEnumerable<MvcClinic.Models.Schedule>
+﻿@model MvcClinic.Models.ScheduleListViewModel
 
 @{
     ViewData["Title"] = "Index";
 }
 
 <h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+@if (Model.isAdmin)
+{
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>    
+}
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Date)
+                @Html.DisplayNameFor(model => model.Schedules[0]!.Date)
             </th>
+            @if (Model.isAdmin || Model.isPatient)
+            {
+                <th>
+                    @Html.DisplayNameFor(model => model.Schedules[0]!.Doctor)
+                </th>
+            }
+            @if (Model.isDoctor || Model.isAdmin)
+            {
+                <th>
+                    @Html.DisplayNameFor(model => model.Schedules[0]!.Patient)
+                </th>
+            }
+            @if (Model.isPatient)
+            {
+                <th>
+                    Booked
+                </th>
+            }
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+        @foreach (var item in Model.Schedules!)
+        {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Date)
+                @Html.DisplayFor(modelItem => item.Date)-@item.Date.AddMinutes(15).ToShortTimeString()
             </td>
+            @if (Model.isPatient || Model.isAdmin)
+            {
+                <td>
+                        @if (item.Doctor != null && item.Doctor.Specialization != null)
+                    {
+                            <text>@Html.DisplayFor(modelItem => item.Doctor.FirstName) @Html.DisplayFor(modelItem => item.Doctor.Surname) [@Html.DisplayFor(modelItem => item.Doctor.Specialization.Name)]</text>
+                    }
+                    else
+                    {
+                            <text>@Html.DisplayFor(modelItem => item.Doctor!.FirstName) @Html.DisplayFor(modelItem => item.Doctor!.Surname)</text>
+                    }
+                </td>
+            }
+            @if (Model.isDoctor || Model.isAdmin)
+            {
+                @if (item.Patient != null)
+                {
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Patient!.FirstName) @Html.DisplayFor(modelItem => item.Patient!.Surname) [@Html.DisplayFor(modelItem => item.Patient!.Email)]
+                    </td>
+                } else
+                {
+                    <td></td>  
+                }
+            }
+            @if (Model.isPatient)
+            {
+                @if (item.Patient == null)
+                {
+                    <td>&#10060;</td>
+                }
+                else
+                {
+                    <td>&#10004;</td>
+                }
+            }
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                @if (Model.isPatient)
+                {
+                    @* <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> *@
+                        <form asp-controller="Schedules" asp-action="Book" asp-route-id="@item.Id" method="post">
+                            <p>
+                                <input type="submit" value="Book" />
+                            </p>
+                        </form>
+                }
+                @if (Model.isAdmin)
+                {
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> <text>|</text>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
             </td>
         </tr>
 }

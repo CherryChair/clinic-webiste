@@ -56,7 +56,7 @@ namespace MvcClinic.Controllers
             var patientSurnameVM = new PatientSurnameViewModel
             {
                 Surnames = new SelectList(await surnameQuery.Distinct().ToListAsync()),
-                Patients = await patients.ToListAsync()
+                Patients = await patients.OrderBy(x => x.Surname).ToListAsync()
             };
 
             return View(patientSurnameVM);
