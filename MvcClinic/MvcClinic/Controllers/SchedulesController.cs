@@ -69,8 +69,7 @@ namespace MvcClinic.Controllers
                 var patient = await _patientManager.GetUserAsync(User);
                 if(!patient!.Active)
                 {
-                    //TODO STRONA Z BRAKIEM DOSTĘPU DLA NIEAKTYWNYCH
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction(nameof(AccessDenied));
                 }
                 schedules = await _context.Schedule.Include(s => s.Doctor)
                     .Include(s => s.Doctor.Specialization).Include(s => s.Patient)
@@ -175,6 +174,12 @@ namespace MvcClinic.Controllers
             return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = startOfWeek, DateTo = endOfWeek});
         }
 
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
         // GET: Schedules/Create
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create()
@@ -214,6 +219,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Schedules/Edit/5
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -248,6 +254,7 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DoctorId")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
         {
             if (id != scheduleEditViewModel.Id)
