@@ -100,11 +100,7 @@ namespace MvcClinic.Controllers
             employee.Surname = employeeEditViewModel.Surname;
 
             var spec = await _context.Speciality.FirstOrDefaultAsync(m => m.Name == employeeEditViewModel.Speciality);
-
-            if (spec != null)
-            {
-                employee.Specialization = spec;
-            }
+            employee.Specialization = spec;
 
             if (ModelState.IsValid)
             {

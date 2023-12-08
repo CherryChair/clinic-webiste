@@ -141,10 +141,8 @@ namespace MvcClinic.Areas.Identity.Pages.Account
                 user.FirstName = Input.FirstName;
                 user.Surname = Input.Surname;
                 var spec = await _context.Speciality.FirstOrDefaultAsync(m => m.Name.Equals(Input.Speciality));
+                user.Specialization = spec;
 
-                if (spec != null) {
-                    user.Specialization = spec;
-                }
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -174,7 +172,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
                     else
                     {
                         //TODO REDIRECT NA SUKCES
-                        return LocalRedirect(returnUrl);
+                        return RedirectToAction("Index", "Employees");
                     }
                 }
                 foreach (var error in result.Errors)
