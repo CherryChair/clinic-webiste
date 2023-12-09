@@ -222,6 +222,27 @@ namespace MvcClinic.Controllers
             return View(schedule);
         }
 
+        // GET: Schedules/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var schedule = await _context.Schedule
+                .Include(s => s.Doctor)
+                .Include(s => s.Doctor.Specialization)
+                .Include(s => s.Patient)
+                .FirstOrDefaultAsync(s => s.Id == id);
+            if (schedule == null)
+            {
+                return NotFound();
+            }
+
+            return View(schedule);
+        }
+
         // GET: Schedules/Edit/5
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Edit(int? id)
@@ -271,6 +292,21 @@ namespace MvcClinic.Controllers
             if (schedule == null)
             {
                 return NotFound();
+            }
+
+            if (schedule.Date < DateTime.Now)
+            {
+                if (schedule.Date != scheduleEditViewModel.Date)
+                {
+                    return BadRequest("Can't edit past schedules Date");
+                }
+
+                if ((scheduleEditViewModel.DoctorId != null && schedule.Doctor == null) ||
+                    (scheduleEditViewModel.DoctorId == null && schedule.Doctor != null) ||
+                    (scheduleEditViewModel.DoctorId == schedule.Doctor.Id))
+                {
+                    return BadRequest("Can't edit past schedules Doctor");
+                }
             }
 
             if (scheduleEditViewModel.DoctorId == null)
@@ -325,6 +361,11 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
+            if (schedule.Date < DateTime.Now)
+            {
+                return BadRequest("Can't book or unbook past schedule");
+            }
+
             var patient = await _patientManager.GetUserAsync(User);
             if (schedule.Patient == null)
             {
@@ -368,11 +409,17 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
+
             var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Doctor.Specialization)
                 .Include(s => s.Patient).FirstOrDefaultAsync(m => m.Id == id);
             if (schedule == null)
             {
                 return NotFound();
+            }
+
+            if (schedule.Date < DateTime.Now)
+            {
+                return RedirectToAction("Details", new {id = id });
             }
 
             return View(schedule);
@@ -385,8 +432,13 @@ namespace MvcClinic.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var schedule = await _context.Schedule.FindAsync(id);
+
             if (schedule != null)
             {
+                if (schedule.Date < DateTime.Now)
+                {
+                    return BadRequest("Can't book or unbook past schedule");
+                }
                 _context.Schedule.Remove(schedule);
             }
 

@@ -1,0 +1,46 @@
+﻿@model MvcClinic.Models.Schedule
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Schedule</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Date)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Date)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Doctor)
+        </dt>
+        <dd class="col-sm-10">
+        @if (Model.Doctor != null && Model.Doctor.Specialization != null)
+        {
+            <text>@Html.DisplayFor(model => model.Doctor.FirstName) @Html.DisplayFor(model => model.Doctor.Surname) [@Html.DisplayFor(model => model.Doctor.Specialization.Name)]</text>
+        }
+        else
+        {
+            <text>@Html.DisplayFor(model => model.Doctor!.FirstName) @Html.DisplayFor(model => model.Doctor!.Surname)</text>
+        }
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Patient)
+        </dt>
+        <dd class="col-sm-10">
+        @if (Model.Patient != null)
+        {
+            <text>@Html.DisplayFor(model => model.Patient!.FirstName) @Html.DisplayFor(model => model.Patient!.Surname) [@Html.DisplayFor(model => model.Patient!.Email)]</text>
+        }
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
