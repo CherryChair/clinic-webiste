@@ -76,6 +76,7 @@ namespace MvcClinic.Controllers
                     .Where(s => DateFrom <= s.Date && s.Date <= DateTo)
                     .Where(s => s.Patient == patient || s.Patient == null)
                     .Where(s => SpecialityId == null || s.Doctor.Specialization.Id == SpecialityId)
+                    .Where(s => s.Doctor != null)
                     .OrderBy(s => s.Date).ToListAsync();
                 schedules.RemoveAll(s => (s.Patient == null && s.Date < DateTime.Now));
             }
@@ -265,6 +266,10 @@ namespace MvcClinic.Controllers
                 {
                     return Unauthorized("Only admin can access other patient's schedules.");
                 }
+                if (schedule.Doctor == null)
+                {
+                    return Unauthorized("Schedule inaccessible.");
+                }
             }
 
             return View(schedule);
@@ -429,7 +434,7 @@ namespace MvcClinic.Controllers
         [Authorize(Policy = "PatientOnly")]
         public async Task<IActionResult> Book(int id, DateTime dateFrom, DateTime dateTo)
         {
-            var schedule = await _context.Schedule.Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == id);
+            var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == id);
 
             if (schedule == null)
             {
@@ -439,6 +444,11 @@ namespace MvcClinic.Controllers
             if (schedule.Date < DateTime.Now)
             {
                 return BadRequest("Can't book or unbook past schedule");
+            }
+
+            if (schedule.Doctor == null)
+            {
+                return BadRequest("Can't book schedule without doctor");
             }
 
             var patient = await _patientManager.GetUserAsync(User);
