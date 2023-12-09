@@ -8,8 +8,16 @@
 @if (Model.isAdmin)
 {
     <p>
-        <a asp-action="Create">Create New</a>
-        <a asp-action="CopyFromLastWeek" class="mx-lg-3">Copy Schedule From Last Week</a>
+        <a asp-action="Create" class="btn btn-primary">Create New</a>
+        <a asp-action="CopyFromLastWeek" class="btn btn-primary mx-lg-1">Copy Schedule From Last Week</a>
+        <form asp-controller="Schedules" asp-action="GenerateReport" method="get">
+            <p>
+                <input type="hidden" name="dateFrom" value="@Model.DateFrom" />
+                <input type="hidden" name="dateTo" value="@Model.DateTo" />
+
+                <input type="submit" value="Generate Report" class="btn btn-primary" />
+            </p>
+        </form>
     </p>
 }
 <form asp-controller="Schedules" asp-action="Index" method="get">
