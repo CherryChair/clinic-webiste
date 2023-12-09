@@ -71,12 +71,13 @@ namespace MvcClinic.Controllers
                 {
                     return RedirectToAction(nameof(AccessDenied));
                 }
-                    schedules = await _context.Schedule.Include(s => s.Doctor)
-                        .Include(s => s.Doctor.Specialization).Include(s => s.Patient)
-                        .Where(s => DateFrom <= s.Date && s.Date <= DateTo)
-                        .Where(s => s.Patient == patient || s.Patient == null)
-                        .Where(s => SpecialityId == null || s.Doctor.Specialization.Id == SpecialityId)
-                        .OrderBy(s => s.Date).ToListAsync();
+                schedules = await _context.Schedule.Include(s => s.Doctor)
+                    .Include(s => s.Doctor.Specialization).Include(s => s.Patient)
+                    .Where(s => DateFrom <= s.Date && s.Date <= DateTo)
+                    .Where(s => s.Patient == patient || s.Patient == null)
+                    .Where(s => SpecialityId == null || s.Doctor.Specialization.Id == SpecialityId)
+                    .OrderBy(s => s.Date).ToListAsync();
+                schedules.RemoveAll(s => (s.Patient == null && s.Date < DateTime.Now));
             }
 
             if (isDoctor)
@@ -170,6 +171,7 @@ namespace MvcClinic.Controllers
                 el.Date = el.Date.AddDays(7); 
                 el.Id = 0;
                 el.Patient = null;
+                el.Description = null;
             });
 
             await _context.AddRangeAsync(newSchedules);
@@ -240,22 +242,69 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
+            if ((await _authorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded)
+            {
+                
+            }
+            else if ((await _authorizationService.AuthorizeAsync(User, "DoctorOnly")).Succeeded)
+            {
+                var doctor = await _employeeManager.GetUserAsync(User);
+                if (schedule.Doctor == null || doctor.Id != schedule.Doctor.Id)
+                {
+                    return Unauthorized("Only admin can access other doctor's schedules.");
+                }
+            }
+            else if ((await _authorizationService.AuthorizeAsync(User, "PatientOnly")).Succeeded)
+            {
+                var patient = await _patientManager.GetUserAsync(User);
+                if (!patient.Active)
+                {
+                    return RedirectToAction(nameof(AccessDenied));
+                }
+                if ((schedule.Patient == null && schedule.Date < DateTime.Now) || (schedule.Patient != null && patient.Id != schedule.Patient.Id))
+                {
+                    return Unauthorized("Only admin can access other patient's schedules.");
+                }
+            }
+
             return View(schedule);
         }
 
         // GET: Schedules/Edit/5
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "DoctorOnly")]
         public async Task<IActionResult> Edit(int? id)
         {
+            bool isDoctor = false;
+            if (!(await _authorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded)
+            {
+                isDoctor = true;
+            }
+
             if (id == null)
             {
                 return NotFound();
             }
-
             var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == id);
             if (schedule == null)
             {
                 return NotFound();
+            }
+
+            List<Employee> doctors = [];
+
+            if (isDoctor)
+            {
+                var doctor = await _employeeManager.GetUserAsync(User);
+
+                if (schedule.Doctor != doctor )
+                {
+                    return Unauthorized("Can't edit other Doctor's schedules");
+                }
+
+                doctors.Add(doctor!);
+            } else
+            {
+                doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
             }
 
 
@@ -263,8 +312,9 @@ namespace MvcClinic.Controllers
             {
                 Date = schedule.Date,
                 Id = schedule.Id,
-                Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync(),
-                Description = schedule.Description
+                Doctors = doctors,
+                Description = schedule.Description,
+                IsDoctor = isDoctor
             };
             if(schedule.Patient != null)
             {
@@ -282,7 +332,7 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "AdminOnly")]
+        [Authorize(Policy = "DoctorOnly")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DoctorId,Description")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
         {
             if (id != scheduleEditViewModel.Id)
@@ -297,18 +347,32 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
-            if (schedule.Date < DateTime.Now)
+            bool isDoctor = !(await _authorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded;
+            if (schedule.Date < DateTime.Now || isDoctor)
             {
+                string message_prefix = "Can't edit past schedule's";
+                Employee doctor = new Employee { };
+                if (isDoctor)
+                {
+                    doctor = await _employeeManager.GetUserAsync(User);
+
+                    if (schedule.Doctor != doctor)
+                    {
+                        return Unauthorized("Can't edit other Doctor's schedules");
+                    }
+                    message_prefix = "Only admin can edit";
+                }
+
                 if (schedule.Date != scheduleEditViewModel.Date)
                 {
-                    return BadRequest("Can't edit past schedules Date");
+                    return BadRequest(message_prefix + " Date");
                 }
 
                 if ((scheduleEditViewModel.DoctorId != null && schedule.Doctor == null) ||
                     (scheduleEditViewModel.DoctorId == null && schedule.Doctor != null) ||
                     (scheduleEditViewModel.DoctorId != schedule.Doctor.Id))
                 {
-                    return BadRequest("Can't edit past schedules Doctor");
+                    return BadRequest(message_prefix + " Doctor");
                 }
             }
 
@@ -326,10 +390,13 @@ namespace MvcClinic.Controllers
                 schedule.Doctor = doctor;
             }
             schedule.Description = scheduleEditViewModel.Description;
-            Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            Console.WriteLine(scheduleEditViewModel.Description);
-            Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            Console.WriteLine(schedule.Description);
+            if(scheduleEditViewModel.Date == null)
+            {
+                return BadRequest();
+            } else
+            {
+                schedule.Date = (DateTime) scheduleEditViewModel.Date;
+            }
 
             if (ModelState.IsValid)
             {

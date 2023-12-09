@@ -21,5 +21,6 @@ namespace MvcClinic.Models
         public List<Employee>? Doctors { get; set;}
         [StringLength(2000)]
         public string? Description { get; set; }
+        public bool? IsDoctor { get; set; }
     }
 }

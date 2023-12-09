@@ -104,23 +104,33 @@
                 @if (Model.isAdmin || Model.isDoctor)
                 {
                     <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> <text>|</text>
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+
                 }
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a>
-                @if (Model.isPatient && item.Date >= DateTime.Now)
+                @if (Model.isPatient)
                 {
-                        <text>|</text>
+                    @if(item.Date >= DateTime.Now)
+                    {
                         <form asp-controller="Schedules" asp-action="Book" asp-route-id="@item.Id" method="post">
                             <p>
                                 <input type="hidden" name="dateFrom" value="@Model.DateFrom" />
                                 <input type="hidden" name="dateTo" value="@Model.DateTo" />
+
                                 @if(item.Patient == null){
-                                    <input type="submit" value="Book" />
+                                    <input type="submit" value="Book" class="btn btn-primary" />
                                 } else
                                 {
-                                    <input type="submit" value="Cancel" />
+                                    <input type="submit" value="Cancel" class="btn btn-danger" />
                                 }
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary">Details</a>
                             </p>
                         </form>
+                    }
+                    else
+                    {
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary">Details</a>
+                    }
+
                 }
                 @if (Model.isAdmin && item.Date >= DateTime.Now)
                 {

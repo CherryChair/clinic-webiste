@@ -15,18 +15,32 @@
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
                 <label asp-for="Date" class="control-label"></label>
-                @if(DateTime.Now <= Model.Date)
-                {
-                    <input asp-for="Date" class="form-control" />
-                } else
+                @if (DateTime.Now > Model.Date || (Model.IsDoctor != null && (bool)Model.IsDoctor))
                 {
                     <input asp-for="Date" class="form-control" readonly/>
+                } else
+                {
+                    <input asp-for="Date" class="form-control" />
                 }
                 <span asp-validation-for="Date" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DoctorId" class="control-label"></label>
-                @if (DateTime.Now <= Model.Date)
+                @if (DateTime.Now > Model.Date || (Model.IsDoctor != null && (bool) Model.IsDoctor))
+                {
+                    var chosenDoctor = Model.Doctors.Find(d => d.Id == Model.DoctorId);
+                    <select asp-for="DoctorId" class="form-control" readonly>
+                        @if (chosenDoctor.Specialization != null)
+                        {
+                            <option value="@chosenDoctor.Id">@Html.DisplayFor(modelItem => chosenDoctor.FirstName) @Html.DisplayFor(modelItem => chosenDoctor.Surname) [@Html.DisplayFor(modelItem => chosenDoctor.Specialization.Name)]</option>
+                        }
+                        else
+                        {
+                            <option value="@chosenDoctor.Id">@Html.DisplayFor(modelItem => chosenDoctor.FirstName) @Html.DisplayFor(modelItem => chosenDoctor.Surname)</option>
+                        }
+                    </select>
+
+                } else
                 {
                     <select asp-for="DoctorId" class="form-control">
                         <option></option>
@@ -40,20 +54,6 @@
                             {
                                 <option value="@item.Id">@Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.Surname)</option>
                             }
-                        }
-                    </select>
-
-                } else
-                {
-                    var chosenDoctor = Model.Doctors.Find(d => d.Id == Model.DoctorId);
-                    <select asp-for="DoctorId" class="form-control" readonly>
-                        @if (chosenDoctor.Specialization != null)
-                        {
-                            <option value="@chosenDoctor.Id">@Html.DisplayFor(modelItem => chosenDoctor.FirstName) @Html.DisplayFor(modelItem => chosenDoctor.Surname) [@Html.DisplayFor(modelItem => chosenDoctor.Specialization.Name)]</option>
-                        }
-                        else
-                        {
-                            <option value="@chosenDoctor.Id">@Html.DisplayFor(modelItem => chosenDoctor.FirstName) @Html.DisplayFor(modelItem => chosenDoctor.Surname)</option>
                         }
                     </select>
                 }
