@@ -19,5 +19,7 @@ namespace MvcClinic.Models
         [DisplayName("Doctor")]
         public string? DoctorId { get; set; }
         public List<Employee>? Doctors { get; set;}
+        [StringLength(2000)]
+        public string? Description { get; set; }
     }
 }

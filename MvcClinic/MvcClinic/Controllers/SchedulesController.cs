@@ -197,13 +197,13 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Create([Bind("Date,DoctorId")] ScheduleCreateOrEditViewModel scheduleCreateViewModel)
+        public async Task<IActionResult> Create([Bind("Date,DoctorId,Description")] ScheduleCreateOrEditViewModel scheduleCreateViewModel)
         {
             if (scheduleCreateViewModel.Date == null)
             {
                 return BadRequest();
             }
-            Schedule schedule = new Schedule { Date=(DateTime) scheduleCreateViewModel.Date};
+            Schedule schedule = new Schedule { Date=(DateTime) scheduleCreateViewModel.Date, Description = scheduleCreateViewModel.Description};
             if (!System.String.IsNullOrEmpty(scheduleCreateViewModel.DoctorId))
             {
                 var doctor = await _context.Employee.FindAsync(scheduleCreateViewModel.DoctorId);
@@ -257,11 +257,14 @@ namespace MvcClinic.Controllers
             {
                 return NotFound();
             }
+
+
             var model = new ScheduleCreateOrEditViewModel
             {
                 Date = schedule.Date,
                 Id = schedule.Id,
-                Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync()
+                Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync(),
+                Description = schedule.Description
             };
             if(schedule.Patient != null)
             {
@@ -280,7 +283,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DoctorId")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DoctorId,Description")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
         {
             if (id != scheduleEditViewModel.Id)
             {
@@ -303,7 +306,7 @@ namespace MvcClinic.Controllers
 
                 if ((scheduleEditViewModel.DoctorId != null && schedule.Doctor == null) ||
                     (scheduleEditViewModel.DoctorId == null && schedule.Doctor != null) ||
-                    (scheduleEditViewModel.DoctorId == schedule.Doctor.Id))
+                    (scheduleEditViewModel.DoctorId != schedule.Doctor.Id))
                 {
                     return BadRequest("Can't edit past schedules Doctor");
                 }
@@ -322,6 +325,11 @@ namespace MvcClinic.Controllers
                 }
                 schedule.Doctor = doctor;
             }
+            schedule.Description = scheduleEditViewModel.Description;
+            Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            Console.WriteLine(scheduleEditViewModel.Description);
+            Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            Console.WriteLine(schedule.Description);
 
             if (ModelState.IsValid)
             {
@@ -419,7 +427,7 @@ namespace MvcClinic.Controllers
 
             if (schedule.Date < DateTime.Now)
             {
-                return RedirectToAction("Details", new {id = id });
+                return RedirectToAction("Details", new {id = id});
             }
 
             return View(schedule);
