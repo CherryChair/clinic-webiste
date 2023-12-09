@@ -122,6 +122,7 @@ namespace MvcClinic.Controllers
 
             var oldSchedules = await _context.Schedule.Include(s => s.Doctor)
                 .Include(s => s.Doctor.Specialization)
+                .Include(s => s.Patient)
                 .Where(s => (endOfWeek <= s.Date && s.Date <= endOfNextWeek))
                 .OrderBy(s => s.Date).ToListAsync();
 
@@ -132,6 +133,7 @@ namespace MvcClinic.Controllers
 
             newSchedules.ForEach(el => {
                 el.Date = el.Date.AddDays(7);
+                el.Patient = null;
             });
 
             List<Schedule> conflictingSchedlues = [];
