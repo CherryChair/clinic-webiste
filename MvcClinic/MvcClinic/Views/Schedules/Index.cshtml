@@ -12,8 +12,9 @@
         <a asp-action="CopyFromLastWeek" class="btn btn-primary mx-lg-1">Copy Schedule From Last Week</a>
         <form asp-controller="Schedules" asp-action="GenerateReport" method="get">
             <p>
-                <input type="hidden" name="dateFrom" value="@Model.DateFrom" />
-                <input type="hidden" name="dateTo" value="@Model.DateTo" />
+                <input type="hidden" name="dateFrom" value="@Model.DateFrom.ToString("MM-dd-yyyy")" />
+                <input type="hidden" name="dateTo" value="@Model.DateTo.ToString("MM-dd-yyyy")" />
+
 
                 <input type="submit" value="Generate Report" class="btn btn-primary" />
             </p>

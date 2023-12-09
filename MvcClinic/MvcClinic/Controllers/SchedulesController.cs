@@ -46,11 +46,6 @@ namespace MvcClinic.Controllers
                 DateTo = DateFrom.Value.AddDays(7);
             }
 
-            Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#($@I)$I@#)($J@#)$J)(@#J$)*(@#J$");
-            Console.WriteLine(DateFrom);
-            Console.WriteLine(DateTo);
-            Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#($@I)$I@#)($J@#)$J)(@#J$)*(@#J$");
-
             bool isAdmin = false;
             bool isDoctor = false;
             bool isPatient = false;
@@ -110,8 +105,8 @@ namespace MvcClinic.Controllers
                 isDoctor = isDoctor,
                 isPatient = isPatient,
                 Schedules = schedules,
-                DateFrom = DateFrom,
-                DateTo = DateTo,
+                DateFrom = (DateTime)DateFrom,
+                DateTo = (DateTime)DateTo,
                 SpecialityId = SpecialityId,
                 Specalities = await _context.Speciality.ToListAsync()
             });
@@ -147,6 +142,51 @@ namespace MvcClinic.Controllers
                 CombinedSchedules = combinedSchedules,
                 DateFrom = endOfWeek,
                 DateTo = endOfNextWeek
+            });
+        }
+        [HttpGet]
+        [Authorize(Policy="AdminOnly")]
+        public async Task<IActionResult> GenerateReport(DateOnly dateFrom, DateOnly dateTo)
+        {
+            var doctors = await _context.Employee.Include(d => d.Specialization).ToListAsync();
+            DateTime dateTimeFrom = dateFrom.ToDateTime(TimeOnly.MinValue);
+            DateTime dateTimeTo = dateTo.ToDateTime(TimeOnly.MinValue);
+
+            List<ReportEntry> reportEntries = new List<ReportEntry>();
+
+            doctors.ForEach(d =>
+            {
+                reportEntries.Add(new ReportEntry
+                    {
+                        DoctorName = d.FirstName + " " + d.Surname,
+                        DoctorSpecialization = d.Specialization?.Name,
+                        PastSchedulesNumber = _context.Schedule
+                            .Where(s => s.Doctor == d)
+                            .Where(s => dateTimeFrom <= s.Date && s.Date < DateTime.Now)
+                            .Count(),
+                        PastSchedulesWithPatientNumber = _context.Schedule
+                            .Where(s => s.Doctor == d)
+                            .Where(s => dateTimeFrom <= s.Date && s.Date < DateTime.Now)
+                            .Where(s => s.Description != null && s.Patient != null)
+                            .Count(),
+                        FutureSchedulesNumber = _context.Schedule
+                            .Where(s => s.Doctor == d)
+                            .Where(s => DateTime.Now <= s.Date && s.Date <= dateTimeTo)
+                            .Count(),
+                        FutureSchedulesWithPatientNumber = _context.Schedule
+                            .Where(s => s.Doctor == d)
+                            .Where(s => DateTime.Now <= s.Date && s.Date <= dateTimeTo)
+                            .Where(s => s.Patient != null)
+                            .Count(),
+                    }
+                );
+            });
+
+            return View(new ScheduleReportViewModel
+            {
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+                ReportEntries = reportEntries.OrderBy(re => re.DoctorSpecialization).ToList(),
             });
         }
 
