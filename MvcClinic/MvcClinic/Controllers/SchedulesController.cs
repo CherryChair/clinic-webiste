@@ -260,6 +260,13 @@ namespace MvcClinic.Controllers
                     return NotFound("Doctor not found");
                 }
                 schedule.Doctor = doctor;
+                if (IsWithin15Minutes(doctor, (DateTime) scheduleCreateViewModel.Date, null))
+                {
+                    TempData["Conflict"] = true;
+                    //return RedirectToAction("Create", "Schedules");
+                    scheduleCreateViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
+                    return View(scheduleCreateViewModel);
+                }
             }
             if (ModelState.IsValid)
             {
@@ -267,7 +274,8 @@ namespace MvcClinic.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(schedule);
+            scheduleCreateViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
+            return View(scheduleCreateViewModel);
         }
 
         // GET: Schedules/Details/5
@@ -390,6 +398,11 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
+            if (scheduleEditViewModel.Date == null)
+            {
+                return BadRequest();
+            }
+
             var schedule = await _context.Schedule.Include(s => s.Patient).Include(s => s.Doctor).FirstOrDefaultAsync(s => s.Id == id);
 
             if (schedule == null)
@@ -438,6 +451,12 @@ namespace MvcClinic.Controllers
                     return NotFound();
                 }
                 schedule.Doctor = doctor;
+                if (IsWithin15Minutes(doctor, (DateTime) scheduleEditViewModel.Date, schedule.Id))
+                {
+                    TempData["Conflict"] = true;
+                    scheduleEditViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
+                    return View(scheduleEditViewModel);
+                }
             }
             schedule.Description = scheduleEditViewModel.Description;
             if(scheduleEditViewModel.Date == null)
@@ -468,6 +487,7 @@ namespace MvcClinic.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            scheduleEditViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
             return View(schedule);
         }
 
@@ -583,6 +603,23 @@ namespace MvcClinic.Controllers
         private bool ScheduleExists(int id)
         {
             return _context.Schedule.Any(e => e.Id == id);
+        }
+
+        private bool IsWithin15Minutes(Employee doctor, DateTime date, int? ScheduleId)
+        {
+            var visitConflictQuery = _context.Schedule.Where(s => s.Doctor == doctor)
+                .Where(s => s.Date < date.AddMinutes(15) && date.AddMinutes(-15) < s.Date);
+            if (ScheduleId != null)
+            {
+                visitConflictQuery.Where(s => s.Id != ScheduleId);
+            }
+            var visitConflict = visitConflictQuery
+                .FirstOrDefault();
+            if (visitConflict != null)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

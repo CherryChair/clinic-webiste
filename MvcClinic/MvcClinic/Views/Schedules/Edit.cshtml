@@ -5,6 +5,10 @@
 }
 
 <h1>Edit</h1>
+@if (TempData["Conflict"] != null)
+{
+    <h5 class="text-danger">Scheduling conflict.</h5>
+}
 
 <h4>Schedule</h4>
 <hr/>
