@@ -46,6 +46,11 @@ namespace MvcClinic.Controllers
                 DateTo = DateFrom.Value.AddDays(7);
             }
 
+            Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#($@I)$I@#)($J@#)$J)(@#J$)*(@#J$");
+            Console.WriteLine(DateFrom);
+            Console.WriteLine(DateTo);
+            Console.WriteLine("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#($@I)$I@#)($J@#)$J)(@#J$)*(@#J$");
+
             bool isAdmin = false;
             bool isDoctor = false;
             bool isPatient = false;
@@ -432,7 +437,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "PatientOnly")]
-        public async Task<IActionResult> Book(int id, DateTime dateFrom, DateTime dateTo)
+        public async Task<IActionResult> Book(int id, DateTime? dateFrom, DateTime? dateTo, int? specialityId)
         {
             var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == id);
 
@@ -482,7 +487,11 @@ namespace MvcClinic.Controllers
                     }
                 }
             }
-            return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = dateFrom, DateTo=dateTo});
+            if (specialityId == 0)
+            {
+                specialityId = null;
+            }
+            return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = dateFrom, DateTo=dateTo, SpecialityId=specialityId});
         }
 
         // GET: Schedules/Delete/5
