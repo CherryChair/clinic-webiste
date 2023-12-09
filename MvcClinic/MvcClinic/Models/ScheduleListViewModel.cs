@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace MvcClinic.Models
@@ -19,7 +20,8 @@ namespace MvcClinic.Models
         [DisplayName("Date From")]
         [Required]
         public DateTime? DateFrom { get; set; }
-
-
+        public List<Speciality>? Specalities { get; set; }
+        [DisplayName("Speciality")]
+        public int? SpecialityId { get; set; }
     }
 }

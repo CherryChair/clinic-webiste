@@ -16,6 +16,17 @@
     <p>
         <label asp-for="DateFrom"></label>: <input asp-for="DateFrom" />
         <label asp-for="DateTo"></label>: <input asp-for="DateTo" />
+        @if (Model.isAdmin || Model.isPatient)
+        {
+            <label asp-for="SpecialityId"></label><text>:</text>
+            <select asp-for="SpecialityId">
+                <option></option>
+                @foreach (var item in Model.Specalities!)
+                {
+                    <option value="@item.Id">@Html.DisplayFor(modelItem => item.Name)</option>
+                }
+            </select>
+        }
         <input type="submit" value="Filter" />
     </p>
 </form>

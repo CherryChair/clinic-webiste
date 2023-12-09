@@ -34,7 +34,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Schedules
-        public async Task<IActionResult> Index(DateTime? DateFrom, DateTime? DateTo)
+        public async Task<IActionResult> Index(DateTime? DateFrom, DateTime? DateTo, int? SpecialityId)
         {
             if (DateFrom == null)
             {
@@ -71,11 +71,12 @@ namespace MvcClinic.Controllers
                 {
                     return RedirectToAction(nameof(AccessDenied));
                 }
-                schedules = await _context.Schedule.Include(s => s.Doctor)
-                    .Include(s => s.Doctor.Specialization).Include(s => s.Patient)
-                    .Where(s => (DateFrom <= s.Date && s.Date <= DateTo))
-                    .Where(s => (s.Patient == patient) || (s.Patient == null))
-                    .OrderBy(s => s.Date).ToListAsync();
+                    schedules = await _context.Schedule.Include(s => s.Doctor)
+                        .Include(s => s.Doctor.Specialization).Include(s => s.Patient)
+                        .Where(s => DateFrom <= s.Date && s.Date <= DateTo)
+                        .Where(s => s.Patient == patient || s.Patient == null)
+                        .Where(s => SpecialityId == null || s.Doctor.Specialization.Id == SpecialityId)
+                        .OrderBy(s => s.Date).ToListAsync();
             }
 
             if (isDoctor)
@@ -91,7 +92,8 @@ namespace MvcClinic.Controllers
                 schedules = await _context.Schedule.Include(s => s.Doctor)
                     .Include(s => s.Doctor.Specialization)
                     .Include(s => s.Patient)
-                    .Where(s => (DateFrom <= s.Date && s.Date <= DateTo))
+                    .Where(s => DateFrom <= s.Date && s.Date <= DateTo)
+                    .Where(s => SpecialityId == null || s.Doctor.Specialization.Id == SpecialityId)
                     .OrderBy(s => s.Date).ToListAsync();
             }
             
@@ -102,7 +104,9 @@ namespace MvcClinic.Controllers
                 isPatient = isPatient,
                 Schedules = schedules,
                 DateFrom = DateFrom,
-                DateTo = DateTo
+                DateTo = DateTo,
+                SpecialityId = SpecialityId,
+                Specalities = await _context.Speciality.ToListAsync()
             });
         }
 
