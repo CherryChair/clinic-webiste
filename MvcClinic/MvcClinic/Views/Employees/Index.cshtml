@@ -30,7 +30,16 @@
     </thead>
     <tbody>
 @foreach (var item in Model) {
-        <tr>
+            @if (TempData["EmpId"] != null && TempData["EmpId"]!.ToString() == item.Id)
+        {
+                ViewData["TrClass"] = "bg-success bg-gradient text-white";
+                ViewData["ActionClass"] = "text-black";
+        } else
+        {
+                ViewData["TrClass"] = "";
+                ViewData["ActionClass"] = "";
+        }
+            <tr class="@ViewData["TrClass"]">
             <td>
                 @Html.DisplayFor(modelItem => item.FirstName)
             </td>
@@ -44,9 +53,9 @@
                 @Html.DisplayFor(modelItem => item.Specialization!.Name)                        
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="@ViewData["ActionClass"]">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id" class="@ViewData["ActionClass"]">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id" class="@ViewData["ActionClass"]">Delete</a>
             </td>
         </tr>
 }
