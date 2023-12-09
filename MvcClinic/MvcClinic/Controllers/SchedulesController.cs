@@ -36,6 +36,12 @@ namespace MvcClinic.Controllers
         // GET: Schedules
         public async Task<IActionResult> Index(DateTime? DateFrom, DateTime? DateTo, int? SpecialityId)
         {
+            bool isAdmin = false;
+            bool isDoctor = false;
+            bool isPatient = false;
+            List<Schedule> schedules = [];
+            List<Speciality> specialities = [];
+
             if (DateFrom == null)
             {
                 DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
@@ -46,9 +52,7 @@ namespace MvcClinic.Controllers
                 DateTo = DateFrom.Value.AddDays(7);
             }
 
-            bool isAdmin = false;
-            bool isDoctor = false;
-            bool isPatient = false;
+
             if ((await _authorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded) {
                 isAdmin = true;
             } else if ((await _authorizationService.AuthorizeAsync(User, "DoctorOnly")).Succeeded) {
@@ -62,7 +66,22 @@ namespace MvcClinic.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            List<Schedule>? schedules = null;
+            specialities = await _context.Speciality.ToListAsync();
+            if (DateFrom >= DateTo)
+            {
+                TempData["WrongDates"] = true;
+                return View(new ScheduleListViewModel
+                {
+                    isAdmin = isAdmin,
+                    isDoctor = isDoctor,
+                    isPatient = isPatient,
+                    Schedules = schedules,
+                    DateFrom = (DateTime)DateFrom,
+                    DateTo = (DateTime)DateTo,
+                    SpecialityId = SpecialityId,
+                    Specalities = specialities
+                });
+            }
             
             if (isPatient)
             {
@@ -98,7 +117,7 @@ namespace MvcClinic.Controllers
                     .Where(s => SpecialityId == null || s.Doctor.Specialization.Id == SpecialityId)
                     .OrderBy(s => s.Date).ToListAsync();
             }
-            
+
             return View(new ScheduleListViewModel
             {
                 isAdmin = isAdmin,
@@ -108,7 +127,7 @@ namespace MvcClinic.Controllers
                 DateFrom = (DateTime)DateFrom,
                 DateTo = (DateTime)DateTo,
                 SpecialityId = SpecialityId,
-                Specalities = await _context.Speciality.ToListAsync()
+                Specalities = specialities
             });
         }
 
@@ -208,32 +227,56 @@ namespace MvcClinic.Controllers
             DateTime dateTimeFrom = dateFrom.ToDateTime(TimeOnly.MinValue);
             DateTime dateTimeTo = dateTo.ToDateTime(TimeOnly.MinValue);
 
+
             List<ReportEntry> reportEntries = new List<ReportEntry>();
+
+            if(dateTimeFrom >= dateTimeTo)
+            {
+                TempData["WrongDates"] = true;
+                return View(new ScheduleReportViewModel { DateFrom=dateFrom, DateTo=dateTo, ReportEntries=reportEntries });
+            }
 
             doctors.ForEach(d =>
             {
+                int? pastSchedulesNumber = null;
+                int? pastSchedulesWithPatientNumber = null;
+                int? futureScheduleNumber = null;
+                int? futureSchedulesWithPatientNumber = null;
+                DateTime upperBoundDate = dateTimeTo < DateTime.Now ? dateTimeTo : DateTime.Now;
+                DateTime lowerBoundDate = dateTimeFrom > DateTime.Now ? dateTimeFrom : DateTime.Now;
+                if (dateTimeFrom <= DateTime.Now)
+                {
+                    pastSchedulesNumber = _context.Schedule
+                        .Where(s => s.Doctor == d)
+                        .Where(s => s.Date <= upperBoundDate && dateTimeFrom <= s.Date)
+                        .Count();
+                    pastSchedulesWithPatientNumber = _context.Schedule
+                        .Where(s => s.Doctor == d)
+                        .Where(s => s.Date <= upperBoundDate && dateTimeFrom <= s.Date)
+                        .Where(s => s.Description != null && s.Patient != null)
+                        .Count();
+                }
+                
+                if (DateTime.Now <= dateTimeTo)
+                {
+                    futureScheduleNumber = _context.Schedule
+                            .Where(s => s.Doctor == d)
+                            .Where(s => lowerBoundDate < s.Date && s.Date <= dateTimeTo)
+                            .Count();
+                    futureSchedulesWithPatientNumber = _context.Schedule
+                            .Where(s => s.Doctor == d)
+                            .Where(s => lowerBoundDate < s.Date && s.Date <= dateTimeTo)
+                            .Where(s => s.Patient != null)
+                            .Count();
+                }
                 reportEntries.Add(new ReportEntry
                 {
                     DoctorName = d.FirstName + " " + d.Surname,
                     DoctorSpecialization = d.Specialization?.Name,
-                    PastSchedulesNumber = _context.Schedule
-                            .Where(s => s.Doctor == d)
-                            .Where(s => dateTimeFrom <= s.Date && s.Date < DateTime.Now)
-                            .Count(),
-                    PastSchedulesWithPatientNumber = _context.Schedule
-                            .Where(s => s.Doctor == d)
-                            .Where(s => dateTimeFrom <= s.Date && s.Date < DateTime.Now)
-                            .Where(s => s.Description != null && s.Patient != null)
-                            .Count(),
-                    FutureSchedulesNumber = _context.Schedule
-                            .Where(s => s.Doctor == d)
-                            .Where(s => DateTime.Now <= s.Date && s.Date <= dateTimeTo)
-                            .Count(),
-                    FutureSchedulesWithPatientNumber = _context.Schedule
-                            .Where(s => s.Doctor == d)
-                            .Where(s => DateTime.Now <= s.Date && s.Date <= dateTimeTo)
-                            .Where(s => s.Patient != null)
-                            .Count(),
+                    PastSchedulesNumber = pastSchedulesNumber,
+                    PastSchedulesWithPatientNumber = pastSchedulesWithPatientNumber,
+                    FutureSchedulesNumber = futureScheduleNumber,
+                    FutureSchedulesWithPatientNumber = futureSchedulesWithPatientNumber,
                 }
                 );
             });
