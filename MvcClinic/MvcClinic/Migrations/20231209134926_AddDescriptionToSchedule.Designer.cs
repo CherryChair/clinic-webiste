@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MvcClinic.Data;
 
@@ -11,9 +12,11 @@ using MvcClinic.Data;
 namespace MvcClinic.Migrations
 {
     [DbContext(typeof(MvcClinicContext))]
-    partial class MvcClinicContextModelSnapshot : ModelSnapshot
+    [Migration("20231209134926_AddDescriptionToSchedule")]
+    partial class AddDescriptionToSchedule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

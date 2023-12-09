@@ -11,5 +11,7 @@ namespace MvcClinic.Models
         public DateTime Date { get; set; }
         public Patient? Patient { get; set; }
         public Employee? Doctor { get; set; }
+        [StringLength(2000)]
+        public string? Description { get; set; }
     }
 }
