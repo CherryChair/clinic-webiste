@@ -18,6 +18,14 @@
 
 @await Html.PartialAsync("~/Views/Shared/_ScheduleListPartial.cshtml", Model.NewSchedules)
 
+@if (Model.ConflictingSchedules.Any())
+{
+    <h1>Conflicting items</h1>
+    <h2 class="text-danger">Won't be added </h2>
+    
+    @await Html.PartialAsync("~/Views/Shared/_ScheduleListPartial.cshtml", Model.ConflictingSchedules)
+}
+
 
 <h1>Old items</h1>
 

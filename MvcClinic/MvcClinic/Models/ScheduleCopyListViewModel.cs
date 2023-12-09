@@ -8,6 +8,7 @@ namespace MvcClinic.Models
         public List<Schedule>? OldSchedules { get; set; }
         public List<Schedule>? NewSchedules { get; set; }
         public List<Schedule>? CombinedSchedules { get; set; }
+        public List<Schedule>? ConflictingSchedules { get; set; }
         [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}")]
         [DataType(DataType.DateTime)]
         [DisplayName("Date To")]
