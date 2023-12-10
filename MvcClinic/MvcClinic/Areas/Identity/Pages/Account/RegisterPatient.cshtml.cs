@@ -20,26 +20,30 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using MvcClinic.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MvcClinic.Areas.Identity.Pages.Account
 {
     public class RegisterPatientModel : PageModel
     {
         private readonly SignInManager<Patient> _signInManager;
-        private readonly UserManager<Patient> _userManager;
+        private readonly UserManager<Patient> _patientManager;
+        private readonly UserManager<Employee> _employeeManager;
         private readonly IUserStore<Patient> _userStore;
         private readonly IUserEmailStore<Patient> _emailStore;
         private readonly ILogger<RegisterPatientModel> _logger;
         private readonly IEmailSender _emailSender;
 
         public RegisterPatientModel(
-            UserManager<Patient> userManager,
+            UserManager<Patient> patientManager,
+            UserManager<Employee> employeeManager,
             IUserStore<Patient> userStore,
             SignInManager<Patient> signInManager,
             ILogger<RegisterPatientModel> logger,
             IEmailSender emailSender)
         {
-            _userManager = userManager;
+            _patientManager = patientManager;
+            _employeeManager = employeeManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
@@ -134,18 +138,25 @@ namespace MvcClinic.Areas.Identity.Pages.Account
 
                 user.FirstName = Input.FirstName;
                 user.Surname = Input.Surname;
+                var emailDuplicateInEmployees = await _employeeManager.FindByEmailAsync(Input.Email);
+
+                if (emailDuplicateInEmployees != null)
+                {
+                    ModelState.AddModelError(string.Empty, "Username '" + Input.Email + "' is already taken.");
+                    return Page();
+                }
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                var result = await _userManager.CreateAsync(user, Input.Password);
+                var result = await _patientManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-                    await _userManager.AddClaimAsync(user, new Claim("IsPatient", "true"));
+                    await _patientManager.AddClaimAsync(user, new Claim("IsPatient", "true"));
 
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var userId = await _patientManager.GetUserIdAsync(user);
+                    var code = await _patientManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
@@ -156,7 +167,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                    if (_patientManager.Options.SignIn.RequireConfirmedAccount)
                     {
                         return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
@@ -192,7 +203,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
 
         private IUserEmailStore<Patient> GetEmailStore()
         {
-            if (!_userManager.SupportsUserEmail)
+            if (!_patientManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }

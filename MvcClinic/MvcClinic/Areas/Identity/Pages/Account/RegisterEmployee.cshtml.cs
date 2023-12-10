@@ -30,7 +30,8 @@ namespace MvcClinic.Areas.Identity.Pages.Account
     public class RegisterEmployeeModel : PageModel
     {
         private readonly SignInManager<Employee> _signInManager;
-        private readonly UserManager<Employee> _userManager;
+        private readonly UserManager<Patient> _patientManager;
+        private readonly UserManager<Employee> _employeeManager;
         private readonly MvcClinicContext _context;
         private readonly IUserStore<Employee> _userStore;
         private readonly IUserEmailStore<Employee> _emailStore;
@@ -38,14 +39,16 @@ namespace MvcClinic.Areas.Identity.Pages.Account
         private readonly IEmailSender _emailSender;
 
         public RegisterEmployeeModel(
-            UserManager<Employee> userManager,
+            UserManager<Patient> patientManager,
+            UserManager<Employee> employeeManager,
             MvcClinicContext context,
             IUserStore<Employee> userStore,
             SignInManager<Employee> signInManager,
             ILogger<RegisterEmployeeModel> logger,
             IEmailSender emailSender)
         {
-            _userManager = userManager;
+            _patientManager = patientManager;
+            _employeeManager = employeeManager;
             _context = context;
             _userStore = userStore;
             _emailStore = GetEmailStore();
@@ -140,21 +143,30 @@ namespace MvcClinic.Areas.Identity.Pages.Account
 
                 user.FirstName = Input.FirstName;
                 user.Surname = Input.Surname;
+
+                var emailDuplicateInPatients = await _patientManager.FindByEmailAsync(Input.Email);
+
+                if (emailDuplicateInPatients != null)
+                {
+                    ModelState.AddModelError(string.Empty, "Username '" + Input.Email + "' is already taken.");
+                    return Page();
+                }
+
                 var spec = await _context.Speciality.FirstOrDefaultAsync(m => m.Name.Equals(Input.Speciality));
                 user.Specialization = spec;
 
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-                var result = await _userManager.CreateAsync(user, Input.Password);
+                var result = await _employeeManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-                    await _userManager.AddClaimAsync(user, new Claim("IsDoctor", "true"));
+                    await _employeeManager.AddClaimAsync(user, new Claim("IsDoctor", "true"));
 
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var userId = await _employeeManager.GetUserIdAsync(user);
+                    var code = await _employeeManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
@@ -165,7 +177,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
                     await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
                         $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                    if (_employeeManager.Options.SignIn.RequireConfirmedAccount)
                     {
                         return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
@@ -202,7 +214,7 @@ namespace MvcClinic.Areas.Identity.Pages.Account
 
         private IUserEmailStore<Employee> GetEmailStore()
         {
-            if (!_userManager.SupportsUserEmail)
+            if (!_employeeManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
