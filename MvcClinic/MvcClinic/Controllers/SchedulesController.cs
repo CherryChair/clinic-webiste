@@ -674,7 +674,7 @@ namespace MvcClinic.Controllers
                 .Where(s => s.Date < date.AddMinutes(15) && date.AddMinutes(-15) < s.Date);
             if (ScheduleId != null)
             {
-                visitConflictQuery.Where(s => s.Id != ScheduleId);
+                visitConflictQuery = visitConflictQuery.Where(s => s.Id != ScheduleId);
             }
             var visitConflict = visitConflictQuery
                 .FirstOrDefault();
