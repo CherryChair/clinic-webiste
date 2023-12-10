@@ -186,7 +186,7 @@ namespace MvcClinic.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("Schedule");
+                    b.ToTable("Schedule", (string)null);
                 });
 
             modelBuilder.Entity("MvcClinic.Models.Speciality", b =>
@@ -202,7 +202,7 @@ namespace MvcClinic.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Speciality");
+                    b.ToTable("Speciality", (string)null);
                 });
 
             modelBuilder.Entity("MvcClinic.Models.UserAccount", b =>
