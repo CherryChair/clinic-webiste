@@ -22,5 +22,6 @@ namespace MvcClinic.Models
         [StringLength(2000)]
         public string? Description { get; set; }
         public bool? IsDoctor { get; set; }
-    }
+        public Guid ConcurrencyStamp { get; set; }
+}
 }

@@ -435,7 +435,8 @@ namespace MvcClinic.Controllers
                 Id = schedule.Id,
                 Doctors = doctors,
                 Description = schedule.Description,
-                IsDoctor = isDoctor
+                IsDoctor = isDoctor,
+                ConcurrencyStamp = schedule.ConcurrencyStamp,
             };
             if(schedule.Patient != null)
             {
@@ -454,7 +455,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "DoctorOnly")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DoctorId,Description")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DoctorId,Description,ConcurrencyStamp")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
         {
             if (id != scheduleEditViewModel.Id)
             {
@@ -474,10 +475,10 @@ namespace MvcClinic.Controllers
             }
 
             bool isDoctor = !(await _authorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded;
+            Employee? doctor = new Employee { };
             if (schedule.Date < DateTime.Now || isDoctor)
             {
                 string message_prefix = "Can't edit past schedule's";
-                Employee doctor = new Employee { };
                 if (isDoctor)
                 {
                     doctor = await _employeeManager.GetUserAsync(User);
@@ -489,7 +490,7 @@ namespace MvcClinic.Controllers
                     message_prefix = "Only admin can edit";
                 }
 
-                if (schedule.Date != scheduleEditViewModel.Date)
+                if (schedule.Date != scheduleEditViewModel.Date && schedule.ConcurrencyStamp == scheduleEditViewModel.ConcurrencyStamp)
                 {
                     return BadRequest(message_prefix + " Date");
                 }
@@ -508,7 +509,7 @@ namespace MvcClinic.Controllers
             }
             else
             {
-                var doctor = await _context.Employee.FindAsync(scheduleEditViewModel.DoctorId);
+                doctor = await _context.Employee.FindAsync(scheduleEditViewModel.DoctorId);
                 if (doctor == null)
                 {
                     return NotFound();
@@ -521,8 +522,9 @@ namespace MvcClinic.Controllers
                     return View(scheduleEditViewModel);
                 }
             }
+
             schedule.Description = scheduleEditViewModel.Description;
-            if(scheduleEditViewModel.Date == null)
+            if (scheduleEditViewModel.Date == null)
             {
                 return BadRequest();
             } else
@@ -530,11 +532,14 @@ namespace MvcClinic.Controllers
                 schedule.Date = (DateTime) scheduleEditViewModel.Date;
             }
 
+            _context.Entry(schedule).OriginalValues["ConcurrencyStamp"] = scheduleEditViewModel.ConcurrencyStamp;
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(schedule);
+                    schedule.ConcurrencyStamp = Guid.NewGuid();
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -545,13 +550,39 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        throw;
+                        await _context.Entry(schedule).ReloadAsync();
+                        TempData["ConcurrencyException"] = true;
+                        scheduleEditViewModel.Date = schedule.Date;
+                        scheduleEditViewModel.Description = schedule.Description;
+
+                        if (schedule.Patient != null)
+                        {
+                            scheduleEditViewModel.Patient = schedule.Patient.FirstName + " " + schedule.Patient.Surname + " [" + schedule.Patient.Email + "]";
+                            scheduleEditViewModel.PatientId = schedule.Patient.Id;
+                        }
+                        if (schedule.Doctor != null)
+                        {
+                            scheduleEditViewModel.DoctorId = schedule.Doctor.Id;
+                        }
+                        if (isDoctor && schedule.Doctor != doctor)
+                        {
+                            return Unauthorized();
+                        }
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            scheduleEditViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
-            return View(schedule);
+            ModelState.Clear();
+            scheduleEditViewModel.ConcurrencyStamp = schedule.ConcurrencyStamp;
+
+            if (!isDoctor)
+            {
+                scheduleEditViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
+            } else
+            {
+                scheduleEditViewModel.Doctors = new List<Employee> {doctor};
+            }
+            scheduleEditViewModel.IsDoctor = isDoctor;
+            return View(scheduleEditViewModel);
         }
 
         // POST: Schedules/Book/5
@@ -560,13 +591,19 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "PatientOnly")]
-        public async Task<IActionResult> Book(int id, DateTime? dateFrom, DateTime? dateTo, int? specialityId)
+        public async Task<IActionResult> Book(int id, Guid concurrencyStamp, DateTime? dateFrom, DateTime? dateTo, int? specialityId)
         {
             var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == id);
 
             if (schedule == null)
             {
                 return NotFound();
+            }
+
+            if (schedule.ConcurrencyStamp != concurrencyStamp)
+            {
+                TempData["ConcurrencyException"] = true;
+                return RedirectToAction(nameof(Index), "Schedules", new { DateFrom = dateFrom, DateTo = dateTo, SpecialityId = specialityId });
             }
 
             if (schedule.Date < DateTime.Now)
@@ -591,11 +628,19 @@ namespace MvcClinic.Controllers
                 return Unauthorized();
             }
 
+            _context.Entry(schedule).OriginalValues["ConcurrencyStamp"] = concurrencyStamp;
+
+            if (specialityId == 0)
+            {
+                specialityId = null;
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(schedule);
+                    schedule.ConcurrencyStamp = Guid.NewGuid();
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -606,13 +651,10 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        throw;
+                        TempData["ConcurrencyExceptionPatient"] = true;
+                        return RedirectToAction(nameof(Index), "Schedules", new { DateFrom = dateFrom, DateTo = dateTo, SpecialityId=specialityId });
                     }
                 }
-            }
-            if (specialityId == 0)
-            {
-                specialityId = null;
             }
             return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = dateFrom, DateTo=dateTo, SpecialityId=specialityId});
         }
@@ -654,12 +696,25 @@ namespace MvcClinic.Controllers
             {
                 if (schedule.Date < DateTime.Now)
                 {
-                    return BadRequest("Can't book or unbook past schedule");
+                    return BadRequest("Can't delete past schedule");
                 }
-                _context.Schedule.Remove(schedule);
+                try
+                {
+                    _context.Schedule.Remove(schedule);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ScheduleExists(schedule.Id))
+                    {
+                        TempData["ConcurrencyExceptionAlreadyDeleted"] = true;
+                    } else
+                    {
+                        TempData["ConcurrencyExceptionDelete"] = true; 
+                    }
+                }
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

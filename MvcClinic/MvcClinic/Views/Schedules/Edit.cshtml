@@ -9,6 +9,10 @@
 {
     <h5 class="text-danger">Scheduling conflict.</h5>
 }
+@if (TempData["ConcurrencyException"] != null)
+{
+    <h5 class="text-danger">Someone else edited data.</h5>
+}
 
 <h4>Schedule</h4>
 <hr/>
@@ -76,6 +80,8 @@
                 <textarea asp-for="Description" type="text" class="form-control" rows="5"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+            <input asp-for="ConcurrencyStamp" hidden />
+
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

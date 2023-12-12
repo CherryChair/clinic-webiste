@@ -4,7 +4,23 @@
     ViewData["Title"] = "Index";
 }
 
+
+
 <h1>Index</h1>
+
+@if (TempData["ConcurrencyExceptionPatient"] != null)
+{
+    <h5 class="text-danger">Schedule you tried to book has changed.</h5>
+}
+@if (TempData["ConcurrencyExceptionDelete"] != null)
+{
+    <h5 class="text-danger">Schedule you tried to delete has changed.</h5>
+}
+@if (TempData["ConcurrencyExceptionAlreadyDeleted"] != null)
+{
+    <h5 class="text-danger">Schedule was already deleted.</h5>
+}
+
 @if (Model.isAdmin)
 {
     <p>
@@ -129,6 +145,7 @@
                                 <input type="hidden" name="dateFrom" value="@Model.DateFrom" />
                                 <input type="hidden" name="dateTo" value="@Model.DateTo" />
                                 <input type="hidden" name="specialityId" value="@Model.SpecialityId" />
+                                <input type="hidden" name="concurrencyStamp" value="@item.ConcurrencyStamp" />
 
                                 @if(item.Patient == null){
                                     <input type="submit" value="Book" class="btn btn-primary" />
