@@ -19,5 +19,6 @@ namespace MvcClinic.Models
         public string? Surname { get; set; }
         public SelectList? Specialities { get; set; }
         public string? Speciality { get; set; }
+        public string? ConcurrencyStamp { get; set; }
     }
 }

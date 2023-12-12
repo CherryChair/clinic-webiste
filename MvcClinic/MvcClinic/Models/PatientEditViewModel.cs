@@ -18,5 +18,6 @@ namespace MvcClinic.Models
         public string? Surname { get; set; }
         [Required]
         public bool Active { get; set; } = false;
+        public string? ConcurrencyStamp { get; set; }
     }
 }

@@ -9,6 +9,14 @@
 {
     <h5 class="text-success">Successfully added employee.</h5>
 }
+@if (TempData["ConcurrencyExceptionEmployeeDelete"] != null)
+{
+    <h5 class="text-danger">Employee you tried to delete has changed.</h5>
+}
+@if (TempData["ConcurrencyExceptionEmployeeAlreadyDeleted"] != null)
+{
+    <h5 class="text-danger">Employee was already deleted.</h5>
+}
 
 <table class="table">
     <thead>

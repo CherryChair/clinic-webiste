@@ -8,7 +8,14 @@
 }
 
 <h1>Index</h1>
-
+@if (TempData["ConcurrencyExceptionPatientDelete"] != null)
+{
+    <h5 class="text-danger">Patient you tried to delete has changed.</h5>
+}
+@if (TempData["ConcurrencyExceptionPatientAlreadyDeleted"] != null)
+{
+    <h5 class="text-danger">Patient was already deleted.</h5>
+}
 <form asp-controller="Patients" asp-action="Index" method="get">
     <p>
         <select asp-for="PatientSurname" asp-items="Model.Surnames">

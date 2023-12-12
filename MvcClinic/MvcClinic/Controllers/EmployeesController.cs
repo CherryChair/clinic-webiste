@@ -66,14 +66,15 @@ namespace MvcClinic.Controllers
             string? spec = "";
             if (employee.Specialization != null)
             {
-                spec = employee.Specialization.Name!;
+                spec = employee.Specialization.Name;
             }
             return View(new EmployeeEditViewModel { 
                 Id=employee.Id,
                 FirstName=employee.FirstName,
                 Surname=employee.Surname,
                 Speciality=spec,
-                Specialities=specialities
+                Specialities=specialities,
+                ConcurrencyStamp=employee.ConcurrencyStamp,
             });
         }
 
@@ -82,7 +83,7 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality")] EmployeeEditViewModel employeeEditViewModel)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality,ConcurrencyStamp")] EmployeeEditViewModel employeeEditViewModel)
         {
             if (id != employeeEditViewModel.Id)
             {
@@ -102,11 +103,14 @@ namespace MvcClinic.Controllers
             var spec = await _context.Speciality.FirstOrDefaultAsync(m => m.Name == employeeEditViewModel.Speciality);
             employee.Specialization = spec;
 
+            _context.Entry(employee).OriginalValues["ConcurrencyStamp"] = employeeEditViewModel.ConcurrencyStamp;
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(employee);
+                    employee.ConcurrencyStamp = Guid.NewGuid().ToString();
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -117,12 +121,29 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        throw;
+                        TempData["ConcurrencyExceptionEmployee"] = true;
+                        await _context.Entry(employee).ReloadAsync();
+                        employeeEditViewModel.FirstName = employee.FirstName;
+                        employeeEditViewModel.Surname = employee.Surname;
+                        if (employee.Specialization != null)
+                        {
+                            employeeEditViewModel.Speciality = employee.Specialization.Name;
+                        } else
+                        {
+                            employeeEditViewModel.Speciality = "";
+                        }
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            return View(employee);
+            ModelState.Clear();
+            employeeEditViewModel.ConcurrencyStamp = employee.ConcurrencyStamp;
+
+            IQueryable<string> specialityQuery = from p in _context.Speciality
+                                                 select p.Name;
+            var specialities = new SelectList(await specialityQuery.Distinct().ToListAsync());
+            employeeEditViewModel.Specialities= specialities;
+
+            return View(employeeEditViewModel);
         }
 
         // GET: Employees/Delete/5
@@ -149,12 +170,27 @@ namespace MvcClinic.Controllers
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var employee = await _context.Employee.FindAsync(id);
+
             if (employee != null)
             {
-                _context.Employee.Remove(employee);
+                try
+                {
+                    _context.Employee.Remove(employee);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!EmployeeExists(employee.Id))
+                    {
+                        TempData["ConcurrencyExceptionEmployeeAlreadyDeleted"] = true;
+                    }
+                    else
+                    {
+                        TempData["ConcurrencyExceptionEmployeeDelete"] = true;
+                    }
+                }
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

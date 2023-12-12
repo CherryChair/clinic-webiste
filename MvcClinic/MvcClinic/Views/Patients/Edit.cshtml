@@ -4,8 +4,14 @@
     ViewData["Title"] = "Edit";
 }
 
+
+
 <h1>Edit</h1>
 
+@if (TempData["ConcurrencyExceptionPatient"] != null)
+{
+    <h5 class="text-danger">Someone else edited data.</h5>
+}
 <h4>Patient</h4>
 <hr />
 <div class="row">
@@ -27,6 +33,7 @@
                 @Html.CheckBoxFor(model => model.Active, new{@class = "form-check-input"})
                 <label asp-for="Active" class="form-check-label"></label>
             </div>
+            <input asp-for="ConcurrencyStamp" hidden />
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

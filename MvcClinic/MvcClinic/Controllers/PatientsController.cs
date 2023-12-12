@@ -101,7 +101,13 @@ namespace MvcClinic.Controllers
             {
                 return NotFound();
             }
-            return View(new PatientEditViewModel{ Id = patient.Id, FirstName = patient.FirstName, Surname=patient.Surname, Active=patient.Active});
+            return View(new PatientEditViewModel{ 
+                Id = patient.Id, 
+                FirstName = patient.FirstName, 
+                Surname=patient.Surname, 
+                Active=patient.Active, 
+                ConcurrencyStamp = patient.ConcurrencyStamp
+            });
         }
 
         // POST: Patients/Edit/5
@@ -110,13 +116,13 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active")] PatientEditViewModel patientEditModel)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientEditViewModel patientEditViewModel)
         {
-            var newFirstName = patientEditModel.FirstName;
-            var newSurname = patientEditModel.Surname;
-            var newActive = patientEditModel.Active;
+            var newFirstName = patientEditViewModel.FirstName;
+            var newSurname = patientEditViewModel.Surname;
+            var newActive = patientEditViewModel.Active;
 
-            if (id != patientEditModel.Id || id == null)
+            if (id != patientEditViewModel.Id || id == null)
             {
                 return NotFound();
             }
@@ -131,12 +137,14 @@ namespace MvcClinic.Controllers
             patient.FirstName = newFirstName;
             patient.Surname = newSurname;
             patient.Active = newActive;
+            _context.Entry(patient).OriginalValues["ConcurrencyStamp"] = patientEditViewModel.ConcurrencyStamp;
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(patient);
+                    patient.ConcurrencyStamp = Guid.NewGuid().ToString();
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -147,12 +155,18 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        throw;
+                        TempData["ConcurrencyExceptionPatient"] = true;
+                        await _context.Entry(patient).ReloadAsync();
+                        patientEditViewModel.FirstName = patient.FirstName;
+                        patientEditViewModel.Surname = patient.Surname;
+                        patientEditViewModel.Active = patient.Active;
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            return View(patient);
+            ModelState.Clear();
+            patientEditViewModel.ConcurrencyStamp = patient.ConcurrencyStamp;
+
+            return View(patientEditViewModel);
         }
 
         // GET: Patients/Delete/5
@@ -181,12 +195,27 @@ namespace MvcClinic.Controllers
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var patient = await _context.Patient.FindAsync(id);
+
             if (patient != null)
             {
-                _context.Patient.Remove(patient);
+                try
+                {
+                    _context.Patient.Remove(patient);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!PatientExists(patient.Id))
+                    {
+                        TempData["ConcurrencyExceptionPatientAlreadyDeleted"] = true;
+                    }
+                    else
+                    {
+                        TempData["ConcurrencyExceptionPatientDelete"] = true;
+                    }
+                }
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
