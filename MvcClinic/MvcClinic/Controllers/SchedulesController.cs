@@ -688,12 +688,13 @@ namespace MvcClinic.Controllers
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id, Guid concurrencyStamp)
         {
             var schedule = await _context.Schedule.FindAsync(id);
 
             if (schedule != null)
             {
+                _context.Entry(schedule).OriginalValues["ConcurrencyStamp"] = concurrencyStamp;
                 if (schedule.Date < DateTime.Now)
                 {
                     return BadRequest("Can't delete past schedule");

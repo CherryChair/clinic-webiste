@@ -192,12 +192,13 @@ namespace MvcClinic.Controllers
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        public async Task<IActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
         {
             var patient = await _context.Patient.FindAsync(id);
 
             if (patient != null)
             {
+                _context.Entry(patient).OriginalValues["ConcurrencyStamp"] = concurrencyStamp;
                 try
                 {
                     _context.Patient.Remove(patient);

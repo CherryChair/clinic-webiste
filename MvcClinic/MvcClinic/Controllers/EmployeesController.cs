@@ -167,12 +167,13 @@ namespace MvcClinic.Controllers
         // POST: Employees/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        public async Task<IActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
         {
             var employee = await _context.Employee.FindAsync(id);
 
             if (employee != null)
             {
+                _context.Entry(employee).OriginalValues["ConcurrencyStamp"] = concurrencyStamp;
                 try
                 {
                     _context.Employee.Remove(employee);
