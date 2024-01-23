@@ -28,7 +28,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Patients
-        public async Task<IActionResult> Index(string patientSurname, string searchString)
+        public async Task<ActionResult<IEnumerable<Patient>>> Index(string patientSurname, string searchString)
         {
             if (_context.Patient == null)
             {
@@ -53,13 +53,13 @@ namespace MvcClinic.Controllers
                 patients = patients.Where(x => x.Surname == patientSurname);
             }
 
-            var patientSurnameVM = new PatientSurnameViewModel
-            {
-                Surnames = new SelectList(await surnameQuery.Distinct().ToListAsync()),
-                Patients = await patients.OrderBy(x => x.Surname).ToListAsync()
-            };
+            //var patientSurnameVM = new PatientSurnameViewModel
+            //{
+            //    Surnames = new SelectList(await surnameQuery.Distinct().ToListAsync()),
+            //    Patients = await patients.OrderBy(x => x.Surname).ToListAsync()
+            //};
 
-            return View(patientSurnameVM);
+            return await patients.OrderBy(x => x.Surname).ToListAsync();
         }
 
         [HttpPost]
@@ -69,7 +69,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Patients/Details/5
-        public async Task<IActionResult> Details(string? id)
+        public async Task<ActionResult<Patient>> Details(string? id)
         {
             if (id == null)
             {
@@ -83,12 +83,12 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
-            return View(patient);
+            return patient;
         }
 
         // GET: Patients/Edit/5
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Edit(string? id)
+        public async Task<ActionResult<PatientEditViewModel>> Edit(string? id)
         {
             if (id == null)
             {
@@ -101,13 +101,13 @@ namespace MvcClinic.Controllers
             {
                 return NotFound();
             }
-            return View(new PatientEditViewModel{ 
+            return new PatientEditViewModel{ 
                 Id = patient.Id, 
                 FirstName = patient.FirstName, 
                 Surname=patient.Surname, 
                 Active=patient.Active, 
                 ConcurrencyStamp = patient.ConcurrencyStamp
-            });
+            };
         }
 
         // POST: Patients/Edit/5
@@ -116,7 +116,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientEditViewModel patientEditViewModel)
+        public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientEditViewModel patientEditViewModel)
         {
             var newFirstName = patientEditViewModel.FirstName;
             var newSurname = patientEditViewModel.Surname;
@@ -155,23 +155,24 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        TempData["ConcurrencyExceptionPatient"] = true;
-                        await _context.Entry(patient).ReloadAsync();
-                        patientEditViewModel.FirstName = patient.FirstName;
-                        patientEditViewModel.Surname = patient.Surname;
-                        patientEditViewModel.Active = patient.Active;
+                        return BadRequest("Concurrency exception");
+                        //TempData["ConcurrencyExceptionPatient"] = true;
+                        //await _context.Entry(patient).ReloadAsync();
+                        //patientEditViewModel.FirstName = patient.FirstName;
+                        //patientEditViewModel.Surname = patient.Surname;
+                        //patientEditViewModel.Active = patient.Active;
                     }
                 }
             }
-            ModelState.Clear();
-            patientEditViewModel.ConcurrencyStamp = patient.ConcurrencyStamp;
+            //ModelState.Clear();
+            //patientEditViewModel.ConcurrencyStamp = patient.ConcurrencyStamp;
 
-            return View(patientEditViewModel);
+            return Ok();
         }
 
         // GET: Patients/Delete/5
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Delete(string? id)
+        public async Task<ActionResult<Patient>> Delete(string? id)
         {
             if (id == null)
             {
@@ -185,14 +186,14 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
-            return View(patient);
+            return patient;
         }
 
         // POST: Patients/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
+        public async Task<ActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
         {
             var patient = await _context.Patient.FindAsync(id);
 
@@ -208,16 +209,17 @@ namespace MvcClinic.Controllers
                 {
                     if (!PatientExists(patient.Id))
                     {
-                        TempData["ConcurrencyExceptionPatientAlreadyDeleted"] = true;
+                        //TempData["ConcurrencyExceptionPatientAlreadyDeleted"] = true;
+                        return NotFound(patient.Id);
                     }
                     else
                     {
-                        TempData["ConcurrencyExceptionPatientDelete"] = true;
+                        return BadRequest("Concurrency exception");
                     }
                 }
             }
 
-            return RedirectToAction(nameof(Index));
+            return Ok();
         }
 
         private bool PatientExists(string id)

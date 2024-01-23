@@ -34,7 +34,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Schedules
-        public async Task<IActionResult> Index(DateTime? DateFrom, DateTime? DateTo, int? SpecialityId)
+        public async Task<ActionResult<ScheduleListViewModel>> Index(DateTime? DateFrom, DateTime? DateTo, int? SpecialityId)
         {
             bool isAdmin = false;
             bool isDoctor = false;
@@ -52,6 +52,10 @@ namespace MvcClinic.Controllers
                 DateTo = DateFrom.Value.AddDays(7);
             }
 
+            if (DateFrom >= DateTo)
+            {
+                return BadRequest("Wrong dates");
+            }
 
             if ((await _authorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded) {
                 isAdmin = true;
@@ -63,32 +67,19 @@ namespace MvcClinic.Controllers
             var employee = await _employeeManager.GetUserAsync(User);
             if (!isAdmin && !isDoctor && !isPatient)
             {
-                return RedirectToAction("Index", "Home");
+                return Unauthorized();
+                //return RedirectToAction("Index", "Home");
             }
 
             specialities = await _context.Speciality.ToListAsync();
-            if (DateFrom >= DateTo)
-            {
-                TempData["WrongDates"] = true;
-                return View(new ScheduleListViewModel
-                {
-                    isAdmin = isAdmin,
-                    isDoctor = isDoctor,
-                    isPatient = isPatient,
-                    Schedules = schedules,
-                    DateFrom = (DateTime)DateFrom,
-                    DateTo = (DateTime)DateTo,
-                    SpecialityId = SpecialityId,
-                    Specalities = specialities
-                });
-            }
             
             if (isPatient)
             {
                 var patient = await _patientManager.GetUserAsync(User);
                 if(!patient!.Active)
                 {
-                    return RedirectToAction(nameof(AccessDenied));
+                    return Unauthorized("Patient account not activated");
+                    //return RedirectToAction(nameof(AccessDenied));
                 }
                 schedules = await _context.Schedule.Include(s => s.Doctor)
                     .Include(s => s.Doctor.Specialization).Include(s => s.Patient)
@@ -118,7 +109,7 @@ namespace MvcClinic.Controllers
                     .OrderBy(s => s.Date).ToListAsync();
             }
 
-            return View(new ScheduleListViewModel
+            return new ScheduleListViewModel
             {
                 isAdmin = isAdmin,
                 isDoctor = isDoctor,
@@ -128,12 +119,12 @@ namespace MvcClinic.Controllers
                 DateTo = (DateTime)DateTo,
                 SpecialityId = SpecialityId,
                 Specalities = specialities
-            });
+            };
         }
 
         [HttpGet]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> CopyFromLastWeek()
+        public async Task<ActionResult<ScheduleCopyListViewModel>> CopyFromLastWeek()
         {
             DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
             DateTime endOfWeek = startOfWeek.AddDays(7);
@@ -169,7 +160,7 @@ namespace MvcClinic.Controllers
             var combinedSchedules = oldSchedules.Concat(newSchedules).OrderBy(el => el.Date).ToList();
 
 
-            return View(new ScheduleCopyListViewModel
+            return new ScheduleCopyListViewModel
             {
                 OldSchedules = oldSchedules,
                 NewSchedules = newSchedules,
@@ -177,13 +168,13 @@ namespace MvcClinic.Controllers
                 ConflictingSchedules = conflictingSchedlues,
                 DateFrom = endOfWeek,
                 DateTo = endOfNextWeek
-            });
+            };
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> CopyFromLastWeek(bool? dummy)
+        public async Task<ActionResult> CopyFromLastWeek(bool? dummy)
         {
             DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
             DateTime endOfWeek = startOfWeek.AddDays(7);
@@ -216,12 +207,13 @@ namespace MvcClinic.Controllers
             await _context.AddRangeAsync(newSchedules);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = startOfWeek, DateTo = endOfWeek});
+            //return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = startOfWeek, DateTo = endOfWeek});
+            return Ok();
         }
 
         [HttpGet]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> GenerateReport(DateOnly dateFrom, DateOnly dateTo)
+        public async Task<ActionResult<ScheduleReportViewModel>> GenerateReport(DateOnly dateFrom, DateOnly dateTo)
         {
             var doctors = await _context.Employee.Include(d => d.Specialization).ToListAsync();
             DateTime dateTimeFrom = dateFrom.ToDateTime(TimeOnly.MinValue);
@@ -232,8 +224,9 @@ namespace MvcClinic.Controllers
 
             if(dateTimeFrom >= dateTimeTo)
             {
-                TempData["WrongDates"] = true;
-                return View(new ScheduleReportViewModel { DateFrom=dateFrom, DateTo=dateTo, ReportEntries=reportEntries });
+                //TempData["WrongDates"] = true;
+                return BadRequest("Wrong dates");
+                //return View(new ScheduleReportViewModel { DateFrom=dateFrom, DateTo=dateTo, ReportEntries=reportEntries });
             }
 
             doctors.ForEach(d =>
@@ -281,25 +274,25 @@ namespace MvcClinic.Controllers
                 );
             });
 
-            return View(new ScheduleReportViewModel
+            return new ScheduleReportViewModel
             {
                 DateFrom = dateFrom,
                 DateTo = dateTo,
                 ReportEntries = reportEntries.OrderBy(re => re.DoctorSpecialization).ToList(),
-            });
+            };
         }
 
-        [HttpGet]
-        public IActionResult AccessDenied()
-        {
-            return View();
-        }
+        //[HttpGet]
+        //public IActionResult AccessDenied()
+        //{
+        //    return View();
+        //}
 
         // GET: Schedules/Create
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Create()
+        public async Task<ActionResult<ScheduleCreateOrEditViewModel>> Create()
         {
-            return View(new ScheduleCreateOrEditViewModel { Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync()});
+            return new ScheduleCreateOrEditViewModel { Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync()};
         }
 
         // POST: Schedules/Create
@@ -308,7 +301,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Create([Bind("Date,DoctorId,Description")] ScheduleCreateOrEditViewModel scheduleCreateViewModel)
+        public async Task<ActionResult> Create([Bind("Date,DoctorId,Description")] ScheduleCreateOrEditViewModel scheduleCreateViewModel)
         {
             if (scheduleCreateViewModel.Date == null)
             {
@@ -325,24 +318,27 @@ namespace MvcClinic.Controllers
                 schedule.Doctor = doctor;
                 if (IsWithin15Minutes(doctor, (DateTime) scheduleCreateViewModel.Date, null))
                 {
-                    TempData["Conflict"] = true;
+                    //TempData["Conflict"] = true;
                     //return RedirectToAction("Create", "Schedules");
-                    scheduleCreateViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
-                    return View(scheduleCreateViewModel);
+                    //scheduleCreateViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
+                    //return View(scheduleCreateViewModel);
+                    return BadRequest("Scheduling conflict");
                 }
             }
             if (ModelState.IsValid)
             {
                 _context.Add(schedule);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                //return RedirectToAction(nameof(Index));
+                return Ok();
             }
-            scheduleCreateViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
-            return View(scheduleCreateViewModel);
+            //scheduleCreateViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
+            return BadRequest("Invalid model state");
+            //return View(scheduleCreateViewModel);
         }
 
         // GET: Schedules/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<ActionResult<Schedule>> Details(int? id)
         {
             if (id == null)
             {
@@ -376,7 +372,8 @@ namespace MvcClinic.Controllers
                 var patient = await _patientManager.GetUserAsync(User);
                 if (!patient.Active)
                 {
-                    return RedirectToAction(nameof(AccessDenied));
+                    return Unauthorized("Patient not authorized");
+                    //return RedirectToAction(nameof(AccessDenied));
                 }
                 if ((schedule.Patient == null && schedule.Date < DateTime.Now) || (schedule.Patient != null && patient.Id != schedule.Patient.Id))
                 {
@@ -386,14 +383,17 @@ namespace MvcClinic.Controllers
                 {
                     return Unauthorized("Schedule inaccessible.");
                 }
+            } else
+            {
+                return Unauthorized();
             }
 
-            return View(schedule);
+            return schedule;
         }
 
         // GET: Schedules/Edit/5
         [Authorize(Policy = "DoctorOnly")]
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<ActionResult<ScheduleCreateOrEditViewModel>> Edit(int? id)
         {
             bool isDoctor = false;
             if (!(await _authorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded)
@@ -446,7 +446,7 @@ namespace MvcClinic.Controllers
             if(schedule.Doctor != null) { 
                 model.DoctorId = schedule.Doctor.Id;
             }
-            return View(model);
+            return model;
         }
 
         // POST: Schedules/Edit/5
@@ -455,7 +455,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "DoctorOnly")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Date,DoctorId,Description,ConcurrencyStamp")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
+        public async Task<ActionResult> Edit(int id, [Bind("Id,Date,DoctorId,Description,ConcurrencyStamp")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
         {
             if (id != scheduleEditViewModel.Id)
             {
@@ -517,9 +517,10 @@ namespace MvcClinic.Controllers
                 schedule.Doctor = doctor;
                 if (IsWithin15Minutes(doctor, (DateTime) scheduleEditViewModel.Date, schedule.Id))
                 {
-                    TempData["Conflict"] = true;
+                    //TempData["Conflict"] = true;
                     scheduleEditViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
-                    return View(scheduleEditViewModel);
+                    //return View(scheduleEditViewModel);
+                    return BadRequest("Scheduling conflict");
                 }
             }
 
@@ -550,39 +551,41 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        await _context.Entry(schedule).ReloadAsync();
-                        TempData["ConcurrencyException"] = true;
-                        scheduleEditViewModel.Date = schedule.Date;
-                        scheduleEditViewModel.Description = schedule.Description;
+                        return BadRequest("Concurrency exception");
+                        //await _context.Entry(schedule).ReloadAsync();
+                        //TempData["ConcurrencyException"] = true;
+                        //scheduleEditViewModel.Date = schedule.Date;
+                        //scheduleEditViewModel.Description = schedule.Description;
 
-                        if (schedule.Patient != null)
-                        {
-                            scheduleEditViewModel.Patient = schedule.Patient.FirstName + " " + schedule.Patient.Surname + " [" + schedule.Patient.Email + "]";
-                            scheduleEditViewModel.PatientId = schedule.Patient.Id;
-                        }
-                        if (schedule.Doctor != null)
-                        {
-                            scheduleEditViewModel.DoctorId = schedule.Doctor.Id;
-                        }
-                        if (isDoctor && schedule.Doctor != doctor)
-                        {
-                            return Unauthorized();
-                        }
+                        //if (schedule.Patient != null)
+                        //{
+                        //    scheduleEditViewModel.Patient = schedule.Patient.FirstName + " " + schedule.Patient.Surname + " [" + schedule.Patient.Email + "]";
+                        //    scheduleEditViewModel.PatientId = schedule.Patient.Id;
+                        //}
+                        //if (schedule.Doctor != null)
+                        //{
+                        //    scheduleEditViewModel.DoctorId = schedule.Doctor.Id;
+                        //}
+                        //if (isDoctor && schedule.Doctor != doctor)
+                        //{
+                        //    return Unauthorized();
+                        //}
                     }
                 }
             }
-            ModelState.Clear();
-            scheduleEditViewModel.ConcurrencyStamp = schedule.ConcurrencyStamp;
+            //ModelState.Clear();
+            //scheduleEditViewModel.ConcurrencyStamp = schedule.ConcurrencyStamp;
 
-            if (!isDoctor)
-            {
-                scheduleEditViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
-            } else
-            {
-                scheduleEditViewModel.Doctors = new List<Employee> {doctor};
-            }
-            scheduleEditViewModel.IsDoctor = isDoctor;
-            return View(scheduleEditViewModel);
+            //if (!isDoctor)
+            //{
+            //    scheduleEditViewModel.Doctors = await _context.Employee.Include(e => e.Specialization).ToListAsync();
+            //} else
+            //{
+            //    scheduleEditViewModel.Doctors = new List<Employee> {doctor};
+            //}
+            //scheduleEditViewModel.IsDoctor = isDoctor;
+            //return View(scheduleEditViewModel);
+            return Ok();
         }
 
         // POST: Schedules/Book/5
@@ -591,7 +594,7 @@ namespace MvcClinic.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "PatientOnly")]
-        public async Task<IActionResult> Book(int id, Guid concurrencyStamp, DateTime? dateFrom, DateTime? dateTo, int? specialityId)
+        public async Task<ActionResult> Book(int id, Guid concurrencyStamp, DateTime? dateFrom, DateTime? dateTo, int? specialityId)
         {
             var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == id);
 
@@ -602,8 +605,9 @@ namespace MvcClinic.Controllers
 
             if (schedule.ConcurrencyStamp != concurrencyStamp)
             {
-                TempData["ConcurrencyException"] = true;
-                return RedirectToAction(nameof(Index), "Schedules", new { DateFrom = dateFrom, DateTo = dateTo, SpecialityId = specialityId });
+                //TempData["ConcurrencyException"] = true;
+                //return RedirectToAction(nameof(Index), "Schedules", new { DateFrom = dateFrom, DateTo = dateTo, SpecialityId = specialityId });
+                return BadRequest("Concurrency exception");
             }
 
             if (schedule.Date < DateTime.Now)
@@ -651,17 +655,19 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        TempData["ConcurrencyExceptionPatient"] = true;
-                        return RedirectToAction(nameof(Index), "Schedules", new { DateFrom = dateFrom, DateTo = dateTo, SpecialityId=specialityId });
+                        //TempData["ConcurrencyExceptionPatient"] = true;
+                        //return RedirectToAction(nameof(Index), "Schedules", new { DateFrom = dateFrom, DateTo = dateTo, SpecialityId=specialityId });
+                        return BadRequest("Concurrency exception");
                     }
                 }
             }
-            return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = dateFrom, DateTo=dateTo, SpecialityId=specialityId});
+            return Ok();
+            //return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = dateFrom, DateTo=dateTo, SpecialityId=specialityId});
         }
 
         // GET: Schedules/Delete/5
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<ActionResult<Schedule>> Delete(int? id)
         {
             if (id == null)
             {
@@ -676,19 +682,21 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
-            if (schedule.Date < DateTime.Now)
-            {
-                return RedirectToAction("Details", new {id = id});
-            }
+            //if (schedule.Date < DateTime.Now)
+            //{
+            //    //return RedirectToAction("Details", new {id = id});
+            //    return BadRequest("Deletion of past schedules not allowed");
+            //}
 
-            return View(schedule);
+            return schedule;
+            //return View(schedule);
         }
 
         // POST: Schedules/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> DeleteConfirmed(int id, Guid concurrencyStamp)
+        public async Task<ActionResult> DeleteConfirmed(int id, Guid concurrencyStamp)
         {
             var schedule = await _context.Schedule.FindAsync(id);
 
@@ -708,15 +716,19 @@ namespace MvcClinic.Controllers
                 {
                     if (!ScheduleExists(schedule.Id))
                     {
-                        TempData["ConcurrencyExceptionAlreadyDeleted"] = true;
-                    } else
+                        return BadRequest("Schedule doesn't exist");
+                        //TempData["ConcurrencyExceptionAlreadyDeleted"] = true;
+                    }
+                    else
                     {
-                        TempData["ConcurrencyExceptionDelete"] = true; 
+                        return BadRequest("Concurrency exception");
+                        //TempData["ConcurrencyExceptionDelete"] = true; 
                     }
                 }
             }
 
-            return RedirectToAction(nameof(Index));
+            return Ok();
+            //return RedirectToAction(nameof(Index));
         }
 
         private bool ScheduleExists(int id)

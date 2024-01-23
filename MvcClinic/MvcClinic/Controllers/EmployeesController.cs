@@ -22,13 +22,16 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Employees
-        public async Task<IActionResult> Index()
+        [HttpGet("[controller]/index")]
+        public async Task<ActionResult<IEnumerable<Employee>>> Index()
         {
-            return View(await _context.Employee.Include(e => e.Specialization).OrderBy(e => e.Surname).ToListAsync());
+            return Ok(await _context.Employee.Include(e => e.Specialization).OrderBy(e => e.Surname).ToListAsync());
+            //return await _context.Employee.Include(e => e.Specialization).OrderBy(e => e.Surname).ToListAsync();
         }
 
         // GET: Employees/Details/5
-        public async Task<IActionResult> Details(string? id)
+        [HttpGet("[controller]/details")]
+        public async Task<ActionResult<Employee>> Details(string? id)
         {
             if (id == null)
             {
@@ -42,11 +45,12 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
-            return View(employee);
+            return employee;
         }
 
+        [HttpGet("[controller]/edit")]
         // GET: Employees/Edit/5
-        public async Task<IActionResult> Edit(string? id)
+        public async Task<ActionResult<EmployeeEditViewModel>> Edit(string? id)
         {
             if (id == null)
             {
@@ -68,22 +72,22 @@ namespace MvcClinic.Controllers
             {
                 spec = employee.Specialization.Name;
             }
-            return View(new EmployeeEditViewModel { 
+            return new EmployeeEditViewModel { 
                 Id=employee.Id,
                 FirstName=employee.FirstName,
                 Surname=employee.Surname,
                 Speciality=spec,
                 Specialities=specialities,
                 ConcurrencyStamp=employee.ConcurrencyStamp,
-            });
+            };
         }
 
         // POST: Employees/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost("[controller]/edit")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality,ConcurrencyStamp")] EmployeeEditViewModel employeeEditViewModel)
+        public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality,ConcurrencyStamp")] EmployeeEditViewModel employeeEditViewModel)
         {
             if (id != employeeEditViewModel.Id)
             {
@@ -121,33 +125,35 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        TempData["ConcurrencyExceptionEmployee"] = true;
-                        await _context.Entry(employee).ReloadAsync();
-                        employeeEditViewModel.FirstName = employee.FirstName;
-                        employeeEditViewModel.Surname = employee.Surname;
-                        if (employee.Specialization != null)
-                        {
-                            employeeEditViewModel.Speciality = employee.Specialization.Name;
-                        } else
-                        {
-                            employeeEditViewModel.Speciality = "";
-                        }
+                        return BadRequest("Concurrency exception");
+                        //TempData["ConcurrencyExceptionEmployee"] = true;
+                        //await _context.Entry(employee).ReloadAsync();
+                        //employeeEditViewModel.FirstName = employee.FirstName;
+                        //employeeEditViewModel.Surname = employee.Surname;
+                        //if (employee.Specialization != null)
+                        //{
+                        //    employeeEditViewModel.Speciality = employee.Specialization.Name;
+                        //} else
+                        //{
+                        //    employeeEditViewModel.Speciality = "";
+                        //}
                     }
                 }
             }
-            ModelState.Clear();
-            employeeEditViewModel.ConcurrencyStamp = employee.ConcurrencyStamp;
+            //ModelState.Clear();
+            //employeeEditViewModel.ConcurrencyStamp = employee.ConcurrencyStamp;
 
-            IQueryable<string> specialityQuery = from p in _context.Speciality
-                                                 select p.Name;
-            var specialities = new SelectList(await specialityQuery.Distinct().ToListAsync());
-            employeeEditViewModel.Specialities= specialities;
+            //IQueryable<string> specialityQuery = from p in _context.Speciality
+            //                                     select p.Name;
+            //var specialities = new SelectList(await specialityQuery.Distinct().ToListAsync());
+            //employeeEditViewModel.Specialities= specialities;
 
-            return View(employeeEditViewModel);
+            return NoContent();
         }
 
         // GET: Employees/Delete/5
-        public async Task<IActionResult> Delete(string? id)
+        [HttpGet("[controller]/delete")]
+        public async Task<ActionResult<Employee>> Delete(string? id)
         {
             if (id == null)
             {
@@ -161,13 +167,13 @@ namespace MvcClinic.Controllers
                 return NotFound();
             }
 
-            return View(employee);
+            return employee;
         }
 
         // POST: Employees/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost("[controller]/delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
+        public async Task<ActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
         {
             var employee = await _context.Employee.FindAsync(id);
 
@@ -183,16 +189,18 @@ namespace MvcClinic.Controllers
                 {
                     if (!EmployeeExists(employee.Id))
                     {
-                        TempData["ConcurrencyExceptionEmployeeAlreadyDeleted"] = true;
+                        //TempData["ConcurrencyExceptionEmployeeAlreadyDeleted"] = true;
+                        return BadRequest("Employee already delted");
                     }
                     else
                     {
-                        TempData["ConcurrencyExceptionEmployeeDelete"] = true;
+                        //TempData["ConcurrencyExceptionEmployeeDelete"] = true;
+                        return BadRequest("Concurrency exception");
                     }
                 }
             }
 
-            return RedirectToAction(nameof(Index));
+            return NoContent();
         }
 
         private bool EmployeeExists(string id)
