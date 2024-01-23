@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MvcClinic.Data;
 using MvcClinic.Models;
 using NuGet.Protocol;
@@ -20,14 +23,17 @@ namespace MvcClinic.Controllers
     {
         private readonly MvcClinicContext _context;
         private readonly UserManager<Patient> _patientManager;
+        private readonly IConfiguration _configuration;
 
-        public PatientsController(MvcClinicContext context, UserManager<Patient> patientManager)
+        public PatientsController(MvcClinicContext context, UserManager<Patient> patientManager, IConfiguration configuration)
         {
             _context = context;
             _patientManager = patientManager;
+            _configuration = configuration;
         }
 
         // GET: Patients
+        [HttpGet("[controller]/index")]
         public async Task<ActionResult<IEnumerable<Patient>>> Index(string patientSurname, string searchString)
         {
             if (_context.Patient == null)
@@ -62,12 +68,7 @@ namespace MvcClinic.Controllers
             return await patients.OrderBy(x => x.Surname).ToListAsync();
         }
 
-        [HttpPost]
-        public string Index(string searchString, bool notUsed)
-        {
-            return "From [HttpPost]Index: filter on " + searchString;
-        }
-
+        [HttpGet("[controller]/details")]
         // GET: Patients/Details/5
         public async Task<ActionResult<Patient>> Details(string? id)
         {
@@ -87,6 +88,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Patients/Edit/5
+        [HttpGet("[controller]/edit")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<PatientEditViewModel>> Edit(string? id)
         {
@@ -113,8 +115,7 @@ namespace MvcClinic.Controllers
         // POST: Patients/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost("[controller]/edit")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientEditViewModel patientEditViewModel)
         {
@@ -171,6 +172,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Patients/Delete/5
+        [HttpGet("[controller]/delete")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<Patient>> Delete(string? id)
         {
@@ -190,8 +192,7 @@ namespace MvcClinic.Controllers
         }
 
         // POST: Patients/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
+        [HttpPost("[controller]/delete")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
         {
@@ -220,6 +221,44 @@ namespace MvcClinic.Controllers
             }
 
             return Ok();
+        }
+
+        [HttpPost("[controller]/login")]
+        public async Task<ActionResult<Patient>> Login([FromBody] LoginModel model)
+        {
+            if (model.Email == null || model.Email == null)
+            {
+                return Unauthorized();
+            }
+            var patient = await _patientManager.FindByEmailAsync(model.Email);
+            if (patient == null)
+            {
+                return NotFound();
+            }
+            if(await _patientManager.CheckPasswordAsync(patient, model.Password))
+            {
+                var userClaims = await _patientManager.GetClaimsAsync(patient);
+                var tokenClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Email, model.Email),
+                };
+                tokenClaims.AddRange(userClaims);
+                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["JWT:ValidIssuer"],
+                    audience: _configuration["JWT:ValidAudience"],
+                    expires: DateTime.Now.AddHours(3),
+                    claims: tokenClaims,
+                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+                return Ok(new
+                {
+                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    expiration = token.ValidTo
+                });
+            }
+
+            return Unauthorized();
         }
 
         private bool PatientExists(string id)

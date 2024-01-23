@@ -34,6 +34,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Schedules
+        [HttpGet("[controller]/index")]
         public async Task<ActionResult<ScheduleListViewModel>> Index(DateTime? DateFrom, DateTime? DateTo, int? SpecialityId)
         {
             bool isAdmin = false;
@@ -122,7 +123,7 @@ namespace MvcClinic.Controllers
             };
         }
 
-        [HttpGet]
+        [HttpGet("[controller]/copyFromLastWeek")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ScheduleCopyListViewModel>> CopyFromLastWeek()
         {
@@ -171,8 +172,7 @@ namespace MvcClinic.Controllers
             };
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost("[controller]/copyFromLastWeek")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult> CopyFromLastWeek(bool? dummy)
         {
@@ -211,7 +211,7 @@ namespace MvcClinic.Controllers
             return Ok();
         }
 
-        [HttpGet]
+        [HttpGet("[controller]/generateReport")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ScheduleReportViewModel>> GenerateReport(DateOnly dateFrom, DateOnly dateTo)
         {
@@ -289,6 +289,7 @@ namespace MvcClinic.Controllers
         //}
 
         // GET: Schedules/Create
+        [HttpGet("[controller]/create")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<ScheduleCreateOrEditViewModel>> Create()
         {
@@ -298,7 +299,7 @@ namespace MvcClinic.Controllers
         // POST: Schedules/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost("[controller]/create")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult> Create([Bind("Date,DoctorId,Description")] ScheduleCreateOrEditViewModel scheduleCreateViewModel)
@@ -338,6 +339,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Schedules/Details/5
+        [HttpGet("[controller]/details")]
         public async Task<ActionResult<Schedule>> Details(int? id)
         {
             if (id == null)
@@ -392,6 +394,7 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Schedules/Edit/5
+        [HttpGet("[controller]/edit")]
         [Authorize(Policy = "DoctorOnly")]
         public async Task<ActionResult<ScheduleCreateOrEditViewModel>> Edit(int? id)
         {
@@ -452,8 +455,7 @@ namespace MvcClinic.Controllers
         // POST: Schedules/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost("[controller]/edit")]
         [Authorize(Policy = "DoctorOnly")]
         public async Task<ActionResult> Edit(int id, [Bind("Id,Date,DoctorId,Description,ConcurrencyStamp")] ScheduleCreateOrEditViewModel scheduleEditViewModel)
         {
@@ -591,8 +593,7 @@ namespace MvcClinic.Controllers
         // POST: Schedules/Book/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpPost("[controller]/book")]
         [Authorize(Policy = "PatientOnly")]
         public async Task<ActionResult> Book(int id, Guid concurrencyStamp, DateTime? dateFrom, DateTime? dateTo, int? specialityId)
         {
@@ -667,6 +668,7 @@ namespace MvcClinic.Controllers
 
         // GET: Schedules/Delete/5
         [Authorize(Policy = "AdminOnly")]
+        [HttpGet("[controller]/delete")]
         public async Task<ActionResult<Schedule>> Delete(int? id)
         {
             if (id == null)
@@ -693,9 +695,9 @@ namespace MvcClinic.Controllers
         }
 
         // POST: Schedules/Delete/5
-        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
+        [HttpPost("[controller]/delete")]
         public async Task<ActionResult> DeleteConfirmed(int id, Guid concurrencyStamp)
         {
             var schedule = await _context.Schedule.FindAsync(id);
