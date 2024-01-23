@@ -226,7 +226,7 @@ namespace MvcClinic.Controllers
         [HttpPost("[controller]/login")]
         public async Task<ActionResult<Patient>> Login([FromBody] LoginModel model)
         {
-            if (model.Email == null || model.Email == null)
+            if (model.Email == null || model.Password == null)
             {
                 return Unauthorized();
             }
