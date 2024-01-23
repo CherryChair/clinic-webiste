@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -65,7 +66,6 @@ namespace MvcClinic.Controllers
             } else if ((await _authorizationService.AuthorizeAsync(User, "PatientOnly")).Succeeded) {
                 isPatient = true;
             }
-            var employee = await _employeeManager.GetUserAsync(User);
             if (!isAdmin && !isDoctor && !isPatient)
             {
                 return Unauthorized();
@@ -73,10 +73,11 @@ namespace MvcClinic.Controllers
             }
 
             specialities = await _context.Speciality.ToListAsync();
+            var email = User.FindFirst(ClaimTypes.Email).Value;
             
             if (isPatient)
             {
-                var patient = await _patientManager.GetUserAsync(User);
+                var patient = await _patientManager.FindByEmailAsync(email);
                 if(!patient!.Active)
                 {
                     return Unauthorized("Patient account not activated");
@@ -94,7 +95,7 @@ namespace MvcClinic.Controllers
 
             if (isDoctor)
             {
-                var doctor = await _employeeManager.GetUserAsync(User);
+                var doctor = await _employeeManager.FindByEmailAsync(email);
                 schedules = await _context.Schedule.Include(s => s.Patient)
                     .Where(s => (DateFrom <= s.Date && s.Date <= DateTo))
                     .Where(s => s.Doctor == doctor).OrderBy(s => s.Date).ToListAsync();
@@ -356,6 +357,7 @@ namespace MvcClinic.Controllers
             {
                 return NotFound();
             }
+            var email = User.FindFirst(ClaimTypes.Email).Value;
 
             if ((await _authorizationService.AuthorizeAsync(User, "AdminOnly")).Succeeded)
             {
@@ -363,7 +365,7 @@ namespace MvcClinic.Controllers
             }
             else if ((await _authorizationService.AuthorizeAsync(User, "DoctorOnly")).Succeeded)
             {
-                var doctor = await _employeeManager.GetUserAsync(User);
+                var doctor = await _employeeManager.FindByEmailAsync(email);
                 if (schedule.Doctor == null || doctor.Id != schedule.Doctor.Id)
                 {
                     return Unauthorized("Only admin can access other doctor's schedules.");
@@ -371,7 +373,7 @@ namespace MvcClinic.Controllers
             }
             else if ((await _authorizationService.AuthorizeAsync(User, "PatientOnly")).Succeeded)
             {
-                var patient = await _patientManager.GetUserAsync(User);
+                var patient = await _patientManager.FindByEmailAsync(email);
                 if (!patient.Active)
                 {
                     return Unauthorized("Patient not authorized");
@@ -418,7 +420,8 @@ namespace MvcClinic.Controllers
 
             if (isDoctor)
             {
-                var doctor = await _employeeManager.GetUserAsync(User);
+                var email = User.FindFirst(ClaimTypes.Email).Value;
+                var doctor = await _employeeManager.FindByEmailAsync(email);
 
                 if (schedule.Doctor != doctor )
                 {
@@ -483,7 +486,8 @@ namespace MvcClinic.Controllers
                 string message_prefix = "Can't edit past schedule's";
                 if (isDoctor)
                 {
-                    doctor = await _employeeManager.GetUserAsync(User);
+                    var email = User.FindFirst(ClaimTypes.Email).Value;
+                    doctor = await _employeeManager.FindByEmailAsync(email);
 
                     if (schedule.Doctor != doctor)
                     {
@@ -620,8 +624,8 @@ namespace MvcClinic.Controllers
             {
                 return BadRequest("Can't book schedule without doctor");
             }
-
-            var patient = await _patientManager.GetUserAsync(User);
+            var email = User.FindFirst(ClaimTypes.Email).Value;
+            var patient = await _patientManager.FindByEmailAsync(email);
             if (schedule.Patient == null)
             {
                 schedule.Patient = patient;

@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MvcClinic.Data;
 using MvcClinic.Models;
 
@@ -15,10 +20,53 @@ namespace MvcClinic.Controllers
     public class EmployeesController : Controller
     {
         private readonly MvcClinicContext _context;
+        private readonly UserManager<Employee> _employeeManager;
+        private readonly IConfiguration _configuration;
 
-        public EmployeesController(MvcClinicContext context)
+        public EmployeesController(MvcClinicContext context, UserManager<Employee> employeeManager, IConfiguration configuration)
         {
             _context = context;
+            _employeeManager = employeeManager;
+            _configuration = configuration;
+        }
+
+        [HttpPost("[controller]/login")]
+        [AllowAnonymous]
+        public async Task<ActionResult<Patient>> Login([FromBody] LoginModel model)
+        {
+            if (model.Email == null || model.Password == null)
+            {
+                return Unauthorized();
+            }
+            var employee = await _employeeManager.FindByEmailAsync(model.Email);
+            if (employee == null)
+            {
+                return NotFound();
+            }
+            if (await _employeeManager.CheckPasswordAsync(employee, model.Password))
+            {
+                var userClaims = await _employeeManager.GetClaimsAsync(employee);
+                var tokenClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Email, model.Email),
+                };
+                tokenClaims.AddRange(userClaims);
+                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["JWT:ValidIssuer"],
+                    audience: _configuration["JWT:ValidAudience"],
+                    expires: DateTime.Now.AddHours(3),
+                    claims: tokenClaims,
+                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+                return Ok(new
+                {
+                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    expiration = token.ValidTo
+                });
+            }
+
+            return Unauthorized();
         }
 
         // GET: Employees
@@ -86,7 +134,6 @@ namespace MvcClinic.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("[controller]/edit")]
-        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality,ConcurrencyStamp")] EmployeeEditViewModel employeeEditViewModel)
         {
             if (id != employeeEditViewModel.Id)
@@ -172,7 +219,6 @@ namespace MvcClinic.Controllers
 
         // POST: Employees/Delete/5
         [HttpPost("[controller]/delete")]
-        [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
         {
             var employee = await _context.Employee.FindAsync(id);

@@ -11,7 +11,7 @@ using MvcClinic.Models;
 
 namespace MvcClinic.Controllers
 {
-    [Authorize(Policy = "DoctorOnly")]
+    [Authorize(Policy = "PatientOnly")]
     public class SpecialitiesController : Controller
     {
         private readonly MvcClinicContext _context;
