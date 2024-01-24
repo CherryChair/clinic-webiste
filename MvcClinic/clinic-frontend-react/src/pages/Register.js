@@ -17,10 +17,10 @@ function RegisterPage() {
           return;
         }
         const registerPayload = {
+          firstName: event.target.firstName.value,
+          surname: event.target.surname.value,
           email: event.target.email.value,
           password: event.target.password.value,
-          firstName: event.target.firstName.value,
-          surname: event.target.surname.value
         }
         axios.post("https://localhost:7298/Patients/register", registerPayload)
           .then(response => {
@@ -40,7 +40,7 @@ function RegisterPage() {
           .catch(err => {
             console.log(err);
             setWrongCredentials(true);
-            setErrorMsg("Passwords don't match");
+            setErrorMsg("Server Error");
         });
     };
 
@@ -61,7 +61,7 @@ function RegisterPage() {
                 alt="Your Company"
               />
               <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-                Register new patient account
+                Register as patient
               </h2>
             </div>
     
