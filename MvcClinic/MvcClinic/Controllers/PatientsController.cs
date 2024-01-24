@@ -39,45 +39,6 @@ namespace MvcClinic.Controllers
             _configuration = configuration;
         }
 
-        [HttpPost("[controller]/login")]
-        [AllowAnonymous]
-        public async Task<ActionResult<Patient>> Login([FromBody] LoginModel model)
-        {
-            if (model.Email == null || model.Password == null)
-            {
-                return BadRequest();
-            }
-            var patient = await _patientManager.FindByEmailAsync(model.Email);
-            if (patient == null)
-            {
-                return NotFound();
-            }
-            if (await _patientManager.CheckPasswordAsync(patient, model.Password))
-            {
-                var userClaims = await _patientManager.GetClaimsAsync(patient);
-                var tokenClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Email, model.Email),
-                };
-                tokenClaims.AddRange(userClaims);
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["JWT:ValidIssuer"],
-                    audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(3),
-                    claims: tokenClaims,
-                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                );
-                return Ok(new
-                {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
-                });
-            }
-
-            return NotFound();
-        }
-
         private Patient CreateUser()
         {
             try

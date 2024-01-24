@@ -48,9 +48,6 @@ export const setAuthToken = token => {
 }
 
 
- 
-
-
 function LoginPage() {
     const [wrongCredentials, setWrongCredentials] = useState(false);
     function handleSubmit(event) {
@@ -60,7 +57,7 @@ function LoginPage() {
           email: event.target.email.value,
           password: event.target.password.value
         }
-        axios.post("https://localhost:7298/Patients/login", loginPayload)
+        axios.post("https://localhost:7298/login", loginPayload)
           .then(response => {
             //get token from response
             const token  =  response.data.token;

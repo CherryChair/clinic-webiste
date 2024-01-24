@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -21,35 +22,66 @@ namespace MvcClinic.Controllers
     {
         private readonly MvcClinicContext _context;
         private readonly UserManager<Employee> _employeeManager;
+        private readonly UserManager<UserAccount> _userManager;
+        private readonly IUserStore<Employee> _userStore;
+        private readonly IUserEmailStore<Employee> _emailStore;
         private readonly IConfiguration _configuration;
 
-        public EmployeesController(MvcClinicContext context, UserManager<Employee> employeeManager, IConfiguration configuration)
+        public EmployeesController(MvcClinicContext context, UserManager<Employee> employeeManager, UserManager<UserAccount> userManager, IConfiguration configuration,
+                IUserStore<Employee> userStore)
         {
             _context = context;
             _employeeManager = employeeManager;
+            _userManager = userManager;
+            _userStore = userStore;
+            _emailStore = (IUserEmailStore<Employee>)_userStore;
             _configuration = configuration;
         }
 
-        [HttpPost("[controller]/login")]
-        [AllowAnonymous]
-        public async Task<ActionResult<Patient>> Login([FromBody] LoginModel model)
+        private Employee CreateUser()
         {
-            if (model.Email == null || model.Password == null)
+            try
             {
-                return Unauthorized();
+                return Activator.CreateInstance<Employee>();
             }
-            var employee = await _employeeManager.FindByEmailAsync(model.Email);
-            if (employee == null)
+            catch
             {
-                return NotFound();
+                throw new InvalidOperationException($"Can't create an instance of '{nameof(Employee)}'. " +
+                    $"Ensure that '{nameof(Employee)}' is not an abstract class and has a parameterless constructor");
             }
-            if (await _employeeManager.CheckPasswordAsync(employee, model.Password))
+        }
+
+        [HttpPost("[controller]/register")]
+        public async Task<ActionResult<Employee>> Register([FromBody] RegisterEmployeeModel model)
+        {
+            if (model.Email == null || model.Password == null || model.FirstName == null || model.Surname == null)
             {
-                var userClaims = await _employeeManager.GetClaimsAsync(employee);
+                return BadRequest();
+            }
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null)
+            {
+                return Conflict();
+            }
+            var employee = CreateUser();
+            employee.FirstName = model.FirstName;
+            employee.Surname = model.Surname;
+            var spec = await _context.Speciality.FirstOrDefaultAsync(m => m.Id == model.SpecializationId);
+            employee.Specialization = spec;
+
+            await _userStore.SetUserNameAsync(employee, model.Email, CancellationToken.None);
+            await _emailStore.SetEmailAsync(employee, model.Email, CancellationToken.None);
+
+            var result = await _employeeManager.CreateAsync(employee, model.Password);
+
+            if (result.Succeeded)
+            {
+                await _employeeManager.AddClaimAsync(employee, new Claim("IsEmployee", "true"));
                 var tokenClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Email, model.Email),
                 };
+                var userClaims = await _employeeManager.GetClaimsAsync(employee);
                 tokenClaims.AddRange(userClaims);
                 var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
                 var token = new JwtSecurityToken(
@@ -65,8 +97,7 @@ namespace MvcClinic.Controllers
                     expiration = token.ValidTo
                 });
             }
-
-            return Unauthorized();
+            return BadRequest();
         }
 
         // GET: Employees
