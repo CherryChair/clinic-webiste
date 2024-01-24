@@ -1,28 +1,26 @@
-import logo from './logo.svg';
 import './App.css';
+import './routes'
+import Cookies from 'js-cookie';
+import './components/RouteGuard'
+import MyRoutes from './routes';
+import { setAuthToken } from './pages/Login';
+import Logout from './components/Logout';
+import Navbar from './components/Navbar';
+
+const token = Cookies.get("token");
+if (token) {
+    setAuthToken(token);
+}
 
 function App() {
-  console.log('demapples');
+  // console.log('demapples');
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Sup? Motherfucker.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Navbar/>
+      <div className="App">
+        <MyRoutes></MyRoutes>
+      </div>
+    </>
   );
 }
 
