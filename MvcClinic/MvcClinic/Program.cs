@@ -8,7 +8,19 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://localhost:3000").AllowAnyHeader();
+                      });
+});
+
 builder.Services.AddDbContext<MvcClinicContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MvcClinicContext") ?? throw new InvalidOperationException("Connection string 'MvcClinicContext' not found.")));
 
@@ -121,7 +133,8 @@ app.UseAuthorization();
 //app.MapControllerRoute(
 //    name: "default",
 //    pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapControllers();
+app.UseCors(MyAllowSpecificOrigins);
+app.MapControllers().RequireCors(MyAllowSpecificOrigins);
 
 //app.MapRazorPages();
 
