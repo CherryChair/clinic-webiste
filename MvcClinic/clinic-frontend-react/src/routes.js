@@ -8,6 +8,7 @@ import { history } from './helpers/history';
 //pages
 import HomePage from "./pages/Home"
 import LoginPage from "./pages/Login"
+import RegisterPage from "./pages/Register";
  
 function MyRoutes() {
    return (
@@ -17,6 +18,10 @@ function MyRoutes() {
                <Route
                    path="/login"
                    element={<LoginPage/>}
+               />
+                <Route
+                   path="/register"
+                   element={<RegisterPage/>}
                />
                <Route
                     path="*"
