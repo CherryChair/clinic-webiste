@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace MvcClinic.Models
+namespace MvcClinic.DTOs
 {
     public class ReportEntry
     {

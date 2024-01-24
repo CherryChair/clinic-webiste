@@ -1,6 +1,6 @@
-namespace MvcClinic.Models
+namespace MvcClinic.DTOs
 {
-    public class ErrorViewModel
+    public class ErrorViewDTO
     {
         public string? RequestId { get; set; }
 

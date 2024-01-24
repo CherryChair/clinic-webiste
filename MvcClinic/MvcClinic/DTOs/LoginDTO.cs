@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MvcClinic.Models
+namespace MvcClinic.DTOs
 {
-    public class LoginModel
+    public class LoginDTO
     {
         [EmailAddress]
         [Required(ErrorMessage = "Email is required")]

@@ -2,11 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MvcClinic.Data;
+using MvcClinic.Models;
 using System;
 using System.Linq;
 using System.Security.Claims;
 
-namespace MvcClinic.Models;
+namespace MvcClinic.DTOs;
 
 public static class SeedData
 {
@@ -39,15 +40,15 @@ public static class SeedData
                 AccessFailedCount = 0,
             };
             context.Employee.Add(AdminUser);
-            Speciality[] specialities = { 
+            Speciality[] specialities = {
                 new Speciality { Name = "Surgeon" },
                 new Speciality { Name = "Cardiologist" },
                 new Speciality { Name = "Urologist" },
                 new Speciality { Name = "Podologist" },
                 new Speciality { Name = "Neurologist" },
                 new Speciality { Name = "Chiropractor" },
-                new Speciality { Name = "Family" }, 
-                new Speciality { Name = "Chiropractor" }, 
+                new Speciality { Name = "Family" },
+                new Speciality { Name = "Chiropractor" },
             };
             context.Speciality.AddRange(specialities);
             context.SaveChanges();

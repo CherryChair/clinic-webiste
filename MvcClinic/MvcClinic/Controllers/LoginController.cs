@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MvcClinic.Data;
+using MvcClinic.DTOs;
 using MvcClinic.Models;
 
 namespace MvcClinic.Controllers
@@ -32,7 +33,7 @@ namespace MvcClinic.Controllers
 
         [HttpPost("/login")]
 
-        public async Task<ActionResult<Patient>> Login([FromBody] LoginModel model)
+        public async Task<ActionResult<Patient>> Login([FromBody] LoginDTO model)
         {
             if (model.Email == null || model.Password == null)
             {

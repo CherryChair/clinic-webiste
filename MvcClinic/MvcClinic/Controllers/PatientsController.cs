@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MvcClinic.Areas.Identity.Pages.Account;
 using MvcClinic.Data;
+using MvcClinic.DTOs;
 using MvcClinic.Models;
 using NuGet.Protocol;
 
@@ -54,7 +55,7 @@ namespace MvcClinic.Controllers
 
         [HttpPost("[controller]/register")]
         [AllowAnonymous]
-        public async Task<ActionResult<Patient>> Register([FromBody] RegisterModel model)
+        public async Task<ActionResult<Patient>> Register([FromBody] RegisterDTO model)
         {
             if (model.Email == null || model.Password == null || model.FirstName == null || model.Surname == null)
             {
@@ -158,7 +159,7 @@ namespace MvcClinic.Controllers
         // GET: Patients/Edit/5
         [HttpGet("[controller]/edit")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult<PatientEditViewModel>> Edit(string? id)
+        public async Task<ActionResult<PatientEditViewDTO>> Edit(string? id)
         {
             if (id == null)
             {
@@ -171,7 +172,7 @@ namespace MvcClinic.Controllers
             {
                 return NotFound();
             }
-            return new PatientEditViewModel{ 
+            return new PatientEditViewDTO{ 
                 Id = patient.Id, 
                 FirstName = patient.FirstName, 
                 Surname=patient.Surname, 
@@ -185,7 +186,7 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("[controller]/edit")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientEditViewModel patientEditViewModel)
+        public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientEditViewDTO patientEditViewModel)
         {
             var newFirstName = patientEditViewModel.FirstName;
             var newSurname = patientEditViewModel.Surname;

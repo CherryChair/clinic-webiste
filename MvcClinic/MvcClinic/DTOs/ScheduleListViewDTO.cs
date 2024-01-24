@@ -1,15 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using MvcClinic.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace MvcClinic.Models
+namespace MvcClinic.DTOs
 {
-    public class ScheduleListViewModel
+    public class ScheduleListViewDTO
     {
-        public bool isAdmin {  get; set; }=false;
-        public bool isDoctor {  get; set; }=false;
-        public bool isPatient {  get; set; }=false;
-        public List<Schedule> Schedules { get; set;}
+        public bool isAdmin { get; set; } = false;
+        public bool isDoctor { get; set; } = false;
+        public bool isPatient { get; set; } = false;
+        public List<Schedule> Schedules { get; set; }
         [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy HH:mm}")]
         [DataType(DataType.DateTime)]
         [DisplayName("Date To")]

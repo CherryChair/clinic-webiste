@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MvcClinic.Data;
+using MvcClinic.DTOs;
 using MvcClinic.Models;
 
 namespace MvcClinic.Controllers
@@ -52,7 +53,7 @@ namespace MvcClinic.Controllers
         }
 
         [HttpPost("[controller]/register")]
-        public async Task<ActionResult<Employee>> Register([FromBody] RegisterEmployeeModel model)
+        public async Task<ActionResult<Employee>> Register([FromBody] RegisterEmployeeDTO model)
         {
             if (model.Email == null || model.Password == null || model.FirstName == null || model.Surname == null)
             {
@@ -129,7 +130,7 @@ namespace MvcClinic.Controllers
 
         [HttpGet("[controller]/edit")]
         // GET: Employees/Edit/5
-        public async Task<ActionResult<EmployeeEditViewModel>> Edit(string? id)
+        public async Task<ActionResult<EmployeeEditViewDTO>> Edit(string? id)
         {
             if (id == null)
             {
@@ -151,7 +152,7 @@ namespace MvcClinic.Controllers
             {
                 spec = employee.Specialization.Name;
             }
-            return new EmployeeEditViewModel { 
+            return new EmployeeEditViewDTO { 
                 Id=employee.Id,
                 FirstName=employee.FirstName,
                 Surname=employee.Surname,
@@ -165,7 +166,7 @@ namespace MvcClinic.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("[controller]/edit")]
-        public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality,ConcurrencyStamp")] EmployeeEditViewModel employeeEditViewModel)
+        public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality,ConcurrencyStamp")] EmployeeEditViewDTO employeeEditViewModel)
         {
             if (id != employeeEditViewModel.Id)
             {

@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace MvcClinic.Models
+namespace MvcClinic.DTOs
 {
-    public class ScheduleReportViewModel
+    public class ScheduleReportViewDTO
     {
         [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}")]
         [DataType(DataType.Date)]

@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using MvcClinic.Models;
 
-namespace MvcClinic.Models
+namespace MvcClinic.DTOs
 {
-    public class ScheduleCopyListViewModel
+    public class ScheduleCopyListViewDTO
     {
         public List<Schedule>? OldSchedules { get; set; }
         public List<Schedule>? NewSchedules { get; set; }

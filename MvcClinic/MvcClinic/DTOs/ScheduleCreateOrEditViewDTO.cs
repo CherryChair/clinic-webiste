@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using MvcClinic.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Policy;
 
-namespace MvcClinic.Models
+namespace MvcClinic.DTOs
 {
     public class ScheduleCreateOrEditViewModel
     {
@@ -18,10 +19,10 @@ namespace MvcClinic.Models
         public string? Patient { get; set; }
         [DisplayName("Doctor")]
         public string? DoctorId { get; set; }
-        public List<Employee>? Doctors { get; set;}
+        public List<Employee>? Doctors { get; set; }
         [StringLength(2000)]
         public string? Description { get; set; }
         public bool? IsDoctor { get; set; }
         public Guid ConcurrencyStamp { get; set; }
-}
+    }
 }

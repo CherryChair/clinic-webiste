@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MvcClinic.Data;
+using MvcClinic.DTOs;
 using MvcClinic.Models;
 using NuGet.Protocol;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -36,7 +37,7 @@ namespace MvcClinic.Controllers
 
         // GET: Schedules
         [HttpGet("[controller]/index")]
-        public async Task<ActionResult<ScheduleListViewModel>> Index(DateTime? DateFrom, DateTime? DateTo, int? SpecialityId)
+        public async Task<ActionResult<ScheduleListViewDTO>> Index(DateTime? DateFrom, DateTime? DateTo, int? SpecialityId)
         {
             bool isAdmin = false;
             bool isDoctor = false;
@@ -111,7 +112,7 @@ namespace MvcClinic.Controllers
                     .OrderBy(s => s.Date).ToListAsync();
             }
 
-            return new ScheduleListViewModel
+            return new ScheduleListViewDTO
             {
                 isAdmin = isAdmin,
                 isDoctor = isDoctor,
@@ -126,7 +127,7 @@ namespace MvcClinic.Controllers
 
         [HttpGet("[controller]/copyFromLastWeek")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult<ScheduleCopyListViewModel>> CopyFromLastWeek()
+        public async Task<ActionResult<ScheduleCopyListViewDTO>> CopyFromLastWeek()
         {
             DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
             DateTime endOfWeek = startOfWeek.AddDays(7);
@@ -162,7 +163,7 @@ namespace MvcClinic.Controllers
             var combinedSchedules = oldSchedules.Concat(newSchedules).OrderBy(el => el.Date).ToList();
 
 
-            return new ScheduleCopyListViewModel
+            return new ScheduleCopyListViewDTO
             {
                 OldSchedules = oldSchedules,
                 NewSchedules = newSchedules,
@@ -214,7 +215,7 @@ namespace MvcClinic.Controllers
 
         [HttpGet("[controller]/generateReport")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult<ScheduleReportViewModel>> GenerateReport(DateOnly dateFrom, DateOnly dateTo)
+        public async Task<ActionResult<ScheduleReportViewDTO>> GenerateReport(DateOnly dateFrom, DateOnly dateTo)
         {
             var doctors = await _context.Employee.Include(d => d.Specialization).ToListAsync();
             DateTime dateTimeFrom = dateFrom.ToDateTime(TimeOnly.MinValue);
@@ -275,7 +276,7 @@ namespace MvcClinic.Controllers
                 );
             });
 
-            return new ScheduleReportViewModel
+            return new ScheduleReportViewDTO
             {
                 DateFrom = dateFrom,
                 DateTo = dateTo,
