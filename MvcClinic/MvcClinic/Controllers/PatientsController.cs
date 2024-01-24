@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MvcClinic.Areas.Identity.Pages.Account;
 using MvcClinic.Data;
 using MvcClinic.Models;
 using NuGet.Protocol;
@@ -23,12 +24,18 @@ namespace MvcClinic.Controllers
     {
         private readonly MvcClinicContext _context;
         private readonly UserManager<Patient> _patientManager;
+        private readonly UserManager<UserAccount> _userManager;
+        private readonly IUserStore<Patient> _userStore;
+        private readonly IUserEmailStore<Patient> _emailStore;
         private readonly IConfiguration _configuration;
-
-        public PatientsController(MvcClinicContext context, UserManager<Patient> patientManager, IConfiguration configuration)
+        public PatientsController(MvcClinicContext context, UserManager<Patient> patientManager, UserManager<UserAccount> userManager, IConfiguration configuration, 
+                IUserStore<Patient> userStore)
         {
             _context = context;
             _patientManager = patientManager;
+            _userManager = userManager;
+            _userStore = userStore;
+            _emailStore = (IUserEmailStore<Patient>)_userStore;
             _configuration = configuration;
         }
 
@@ -38,7 +45,7 @@ namespace MvcClinic.Controllers
         {
             if (model.Email == null || model.Password == null)
             {
-                return Unauthorized();
+                return BadRequest();
             }
             var patient = await _patientManager.FindByEmailAsync(model.Email);
             if (patient == null)
@@ -68,7 +75,68 @@ namespace MvcClinic.Controllers
                 });
             }
 
-            return Unauthorized();
+            return NotFound();
+        }
+
+        private Patient CreateUser()
+        {
+            try
+            {
+                return Activator.CreateInstance<Patient>();
+            }
+            catch
+            {
+                throw new InvalidOperationException($"Can't create an instance of '{nameof(Patient)}'. " +
+                    $"Ensure that '{nameof(Patient)}' is not an abstract class and has a parameterless constructor");
+            }
+        }
+
+        [HttpPost("[controller]/register")]
+        [AllowAnonymous]
+        public async Task<ActionResult<Patient>> Register([FromBody] RegisterModel model)
+        {
+            if (model.Email == null || model.Password == null || model.FirstName == null || model.Surname == null)
+            {
+                return BadRequest();
+            }
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null)
+            {
+                return Conflict();
+            }
+            var patient = CreateUser();
+            patient.FirstName = model.FirstName;
+            patient.Surname = model.Surname;
+
+            await _userStore.SetUserNameAsync(patient, model.Email, CancellationToken.None);
+            await _emailStore.SetEmailAsync(patient, model.Email, CancellationToken.None);
+
+            var result = await _patientManager.CreateAsync(patient, model.Password);
+
+            if (result.Succeeded)
+            {
+                await _patientManager.AddClaimAsync(patient, new Claim("IsPatient", "true"));
+                var tokenClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Email, model.Email),
+                };
+                var userClaims = await _patientManager.GetClaimsAsync(patient);
+                tokenClaims.AddRange(userClaims);
+                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["JWT:ValidIssuer"],
+                    audience: _configuration["JWT:ValidAudience"],
+                    expires: DateTime.Now.AddHours(3),
+                    claims: tokenClaims,
+                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+                return Ok(new
+                {
+                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    expiration = token.ValidTo
+                });
+            }
+            return BadRequest();
         }
 
         // GET: Patients
