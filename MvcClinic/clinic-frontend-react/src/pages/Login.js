@@ -51,7 +51,6 @@ export const setAuthToken = token => {
 function LoginPage() {
     const [wrongCredentials, setWrongCredentials] = useState(false);
     function handleSubmit(event) {
-        //reqres registered sample user
         event.preventDefault();
         const loginPayload = {
           email: event.target.email.value,
@@ -59,17 +58,13 @@ function LoginPage() {
         }
         axios.post("https://localhost:7298/login", loginPayload)
           .then(response => {
-            //get token from response
             const token  =  response.data.token;
     
             decodeTokenAndSetRole(token);
       
-            //set JWT token to local
             Cookies.set("token", token, {expires: Date.parse(response.data.expiration)});
-            //set token to axios common header
             setAuthToken(token);
       
-     //redirect user to home page
             window.location.href = '/'
           })
           .catch(err => {
@@ -84,14 +79,6 @@ function LoginPage() {
     
     return (
         <>
-          {/*
-            This example requires updating your template:
-    
-            ```
-            <html class="h-full bg-white">
-            <body class="h-full">
-            ```
-          */}
           <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">
               <img
@@ -105,7 +92,6 @@ function LoginPage() {
             </div>
     
             <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-              {/* <form className="space-y-6" action="#" method="POST"> */}
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <div className="flex items-center justify-between">

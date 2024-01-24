@@ -4,7 +4,6 @@ import { setAuthToken } from '../pages/Login';
 const handleClick = () => {
     Cookies.remove("token");
     setAuthToken();
-    // window.location.href = '/';
 };
 
 function Logout({className}) {
