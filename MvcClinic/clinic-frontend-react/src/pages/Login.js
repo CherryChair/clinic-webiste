@@ -1,6 +1,8 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
+import { useState } from 'react';
+import ErrorBox from '../components/ErrorBox';
 
 const decodeTokenAndSetRole = (token) => {
     let decodedToken = jwtDecode(token);
@@ -33,34 +35,44 @@ export const setAuthToken = token => {
        delete axios.defaults.headers.common["Authorization"];
 }
 
-const handleSubmit = event => {
-    //reqres registered sample user
-    event.preventDefault();
-    const loginPayload = {
-      email: event.target.email.value,
-      password: event.target.password.value
-    }
-    axios.post("https://localhost:7298/Patients/login", loginPayload)
-      .then(response => {
-        //get token from response
-        const token  =  response.data.token;
 
-        decodeTokenAndSetRole(token);
-  
-        //set JWT token to local
-        Cookies.set("token", token, {expires: Date.parse(response.data.expiration)});
-        //set token to axios common header
-        setAuthToken(token);
-  
- //redirect user to home page
-        window.location.href = '/'
-      })
-      .catch(err => console.log(err));
-    };
  
 
 
 function LoginPage() {
+    const [wrongCredentials, setWrongCredentials] = useState(false);
+    function handleSubmit(event) {
+        //reqres registered sample user
+        event.preventDefault();
+        const loginPayload = {
+          email: event.target.email.value,
+          password: event.target.password.value
+        }
+        axios.post("https://localhost:7298/Patients/login", loginPayload)
+          .then(response => {
+            //get token from response
+            const token  =  response.data.token;
+    
+            decodeTokenAndSetRole(token);
+      
+            //set JWT token to local
+            Cookies.set("token", token, {expires: Date.parse(response.data.expiration)});
+            //set token to axios common header
+            setAuthToken(token);
+      
+     //redirect user to home page
+            window.location.href = '/'
+          })
+          .catch(err => {
+            console.log(err);
+            setWrongCredentials(true);
+        });
+    };
+
+    function changeErrorFlag() {
+        wrongCredentials ? setWrongCredentials(false) : setWrongCredentials(true);
+    }
+    
     return (
         <>
           {/*
@@ -121,7 +133,7 @@ function LoginPage() {
                     />
                   </div>
                 </div>
-    
+                <ErrorBox errorFlag={wrongCredentials} changeErrorFlag={changeErrorFlag} errorMsg={"Wrong credentials"}/>
                 <div>
                   <button
                     type="submit"
