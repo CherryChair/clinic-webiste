@@ -46,7 +46,11 @@ function RegisterEmployeePage() {
           .catch(err => {
             console.log(err);
             clearSuccessFlag();
-            setError("Server Error");
+            if (err.response.status === 409) {
+              setError("Email registered");
+            } else {
+              setError("Server Error");
+            }
         });
     };
 
