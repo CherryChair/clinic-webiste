@@ -3,12 +3,12 @@ import Cookies from 'js-cookie';
 import { useState } from 'react';
 import ErrorBox from '../components/ErrorBox';
 import { decodeTokenAndSetRole, setAuthToken } from './Login';
+import FormField from '../components/FormField';
 
 
 function RegisterPage() {
     const [wrongCredentials, setWrongCredentials] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
-    const passwordClassName = "block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6";
     function handleSubmit(event) {
         event.preventDefault();
         if (event.target.password.value !== event.target.confirmedPassword.value) {
@@ -68,93 +68,15 @@ function RegisterPage() {
             <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
               {/* <form className="space-y-6" action="#" method="POST"> */}
               <form className="space-y-6" onSubmit={handleSubmit}>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="firstName" className="block text-sm font-medium leading-6 text-gray-900">
-                        First name
-                    </label>
-                  </div>
-                  <div className="mt-2">
-                    <input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      autoComplete="firstName"
-                      required
-                      className="block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="surname" className="block text-sm font-medium leading-6 text-gray-900">
-                        Surname
-                    </label>
-                  </div>
-                  <div className="mt-2">
-                    <input
-                      id="surname"
-                      name="surname"
-                      type="text"
-                      autoComplete="surname"
-                      required
-                      className="block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
-                        Email address
-                    </label>
-                  </div>
-                  <div className="mt-2">
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      required
-                      className="block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    />
-                  </div>
-                </div>
-    
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-                      Password
-                    </label>
-                  </div>
-                  <div className="mt-2">
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                      className={errorMsg === "Passwords don't match" ? passwordClassName + " border-red-500" : passwordClassName}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="confirmedPassword" className="block text-sm font-medium leading-6 text-gray-900">
-                      Confirm password
-                    </label>
-                  </div>
-                  
-                  <div className="mt-2">
-                    <input
-                      id="confirmedPassword"
-                      name="confirmedPassword"
-                      type="password"
-                      required
-                      className={errorMsg === "Passwords don't match" ? passwordClassName + " border-red-500" : passwordClassName}
-                    />
-                  </div>
-                </div>
+                <FormField type="text" attr="firstName" label="First name"/>
+                <FormField type="text" attr="surname" label="Surname"/>
+                <FormField type="email" attr="email" label="Email address"/>
+                <FormField type="password" attr="password" label="Password" 
+                  className={errorMsg === "Passwords don't match" ? " border-red-500" : ""}
+                />
+                <FormField type="password" attr="confirmedPassword" label="Confirm password" 
+                  className={errorMsg === "Passwords don't match" ? " border-red-500" : ""}
+                />
                 <ErrorBox errorFlag={wrongCredentials} changeErrorFlag={changeErrorFlag} errorMsg={errorMsg}/>
                 <div>
                   <button

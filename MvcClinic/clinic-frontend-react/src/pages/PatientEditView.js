@@ -4,6 +4,9 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import ErrorBox from "../components/ErrorBox";
 import { isAdmin } from "./Login";
+import ButtonAccept from "../components/ButtonAccept";
+import ButtonCancel from "../components/ButtonCancel";
+import FormField from "../components/FormField";
 
 
 export default function PatientEditPage() {
@@ -87,66 +90,9 @@ export default function PatientEditPage() {
             <ErrorBox errorFlag={errorFlag} changeErrorFlag={clearErrorFlag} errorMsg={errorMsg}/>
             {/* <form className="space-y-6" action="#" method="POST"> */}
             <form className="space-y-6" onSubmit={handleSubmit}>
-              <div>
-                <div className="flex items-center justify-between">
-                  <label htmlFor="firstName" className="block text-sm font-medium leading-6 text-gray-900">
-                      First name
-                  </label>
-                </div>
-                <div className="mt-2">
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    defaultValue={patient.firstName}
-                    autoComplete="firstName"
-                    required
-                    disabled={doctor}
-                    className="block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <label htmlFor="surname" className="block text-sm font-medium leading-6 text-gray-900">
-                      Surname
-                  </label>
-                </div>
-                <div className="mt-2">
-                  <input
-                    id="surname"
-                    name="surname"
-                    type="text"
-                    autoComplete="surname"
-                    defaultValue={patient.surname}
-                    required
-                    disabled={doctor}
-                    className="block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  />
-                </div>
-              </div>
-
-
-              <div>
-                <div className="flex items-center justify-between">
-                  <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
-                      Email address
-                  </label>
-                </div>
-                <div className="mt-2">
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    defaultValue={patient.email}
-                    autoComplete="email"
-                    required
-                    disabled={doctor}
-                    className="block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  />
-                </div>
-              </div>
+                <FormField type="text" attr="firstName" label="First name" defaultValue={patient.firstName} disabled={doctor}/>
+                <FormField type="text" attr="surname" label="Surname" defaultValue={patient.surname} disabled={doctor}/>
+                <FormField type="email" attr="email" label="Email address" defaultValue={patient.email} disabled={doctor}/>
 
               <div>
                 <div className="flex items-center">
@@ -158,18 +104,8 @@ export default function PatientEditPage() {
               </div>
                 {!doctor &&
                     <div className="flex">
-                        <button
-                        type="submit"
-                        className="flex w-6/12 justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                        >
-                        Save
-                        </button>
-                        <button
-                        onClick={handleDelete}
-                        className="flex ml-1 w-6/12 justify-center rounded-md bg-gray-500 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-500"
-                        >
-                        Delete
-                        </button>
+                        <ButtonAccept type="submit" className="w-6/12" text="Save"/>
+                        <ButtonCancel className="w-6/12 ml-1" text="Delete" onClick={handleDelete}/>
                     </div>
                 }
             </form>
