@@ -29,6 +29,10 @@ function MyRoutes() {
                     element={<RouteGuard loggedIn={true} adminComponent={true} component={RegisterEmployeePage}/>}
                 />
                 <Route
+                    path="/patients"
+                    element={<RouteGuard loggedIn={true} doctorComponent={true} adminComponent={true} component={RegisterEmployeePage}/>}
+                />
+                <Route
                     path="*"
                     element={<Navigate to="/home" replace />}
                 />
