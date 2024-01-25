@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PatientListElement from "../components/PatientListElement";
 import axios from "axios";
 import ErrorBox from "../components/ErrorBox";
+import { isAdmin } from "./Login"
 
 
 export default function PatientListPage() {
@@ -9,6 +10,8 @@ export default function PatientListPage() {
     const [patients, setPatients] = useState([]);
     const [errorFlag, setErrorFlag] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+
+    let admin = isAdmin();
     
     useEffect(() => {
         getPatients();
@@ -31,6 +34,10 @@ export default function PatientListPage() {
         setErrorMsg("");
         setErrorFlag(false);
     };
+
+    const handleDelete = () => {
+        window.location.reload();
+    };
   
     return (
         <div className="relative overflow-x-auto shadow-md sm:rounded-lg w-9/12 m-auto mt-16">
@@ -47,9 +54,12 @@ export default function PatientListPage() {
                         <th scope="col" className="px-6 py-3">
                             Activated
                         </th>
-                        <th scope="col" className="px-6 py-3">
-                            <span className="sr-only">Edit</span>
-                        </th>
+                        {admin && (
+                            <th scope="col" className="px-6 py-3">
+                                <span className="sr-only">Edit</span>
+                            </th>
+                        )}
+
                     </tr>
                 </thead>
                 <tbody>
@@ -60,7 +70,9 @@ export default function PatientListPage() {
                         email={item.email} 
                         activated={item.active}
                         concurrencyStamp={item.concurrencyStamp} 
-                        setErrorFunc={setError}/>))
+                        setErrorFunc={setError}
+                        onDelete={handleDelete}
+                        admin={admin}/>))
                     }
                 </tbody>
             </table>

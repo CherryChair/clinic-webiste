@@ -192,13 +192,13 @@ namespace MvcClinic.Controllers
         // POST: Patients/Delete/5
         [HttpPost("[controller]/delete")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
+        public async Task<ActionResult> DeleteConfirmed([FromBody] DeleteDTO requestBody)
         {
-            var patient = await _context.Patient.FindAsync(id);
+            var patient = await _context.Patient.FindAsync(requestBody.Id);
 
             if (patient != null)
             {
-                _context.Entry(patient).OriginalValues["ConcurrencyStamp"] = concurrencyStamp;
+                _context.Entry(patient).OriginalValues["ConcurrencyStamp"] = requestBody.ConcurrencyStamp;
                 try
                 {
                     _context.Patient.Remove(patient);
@@ -209,13 +209,15 @@ namespace MvcClinic.Controllers
                     if (!PatientExists(patient.Id))
                     {
                         //TempData["ConcurrencyExceptionPatientAlreadyDeleted"] = true;
-                        return NotFound(patient.Id);
+                        return StatusCode(410);
                     }
                     else
                     {
-                        return BadRequest("Concurrency exception");
+                        return Conflict("Concurrency exception");
                     }
                 }
+            } else { 
+                return StatusCode(410); 
             }
 
             return Ok();
