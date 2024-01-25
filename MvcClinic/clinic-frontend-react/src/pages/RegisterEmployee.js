@@ -1,18 +1,24 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { useState } from 'react';
 import ErrorBox from '../components/ErrorBox';
-import { decodeTokenAndSetRole, setAuthToken } from './Login';
+import SuccessBox from '../components/SuccessBox';
 
 
-function RegisterPage() {
-    const [wrongCredentials, setWrongCredentials] = useState(false);
+function RegisterEmployeePage() {
+    const [errorFlag, setErrorFlag] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+    const [successFlag, setSuccessFlag] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
     const passwordClassName = "block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6";
+    
+    let specialities;
+
+    // axios.get("")
+
     function handleSubmit(event) {
         event.preventDefault();
         if (event.target.password.value !== event.target.confirmedPassword.value) {
-          setWrongCredentials(true);
+          setErrorFlag(true);
           setErrorMsg("Passwords don't match");
           return;
         }
@@ -22,33 +28,36 @@ function RegisterPage() {
           email: event.target.email.value,
           password: event.target.password.value,
         }
-        axios.post("https://localhost:7298/Patients/register", registerPayload)
+        axios.post("/Employee/register", registerPayload)
           .then(response => {
-            //get token from response
-            const token  =  response.data.token;
-    
-            decodeTokenAndSetRole(token);
-      
-            //set JWT token to local
-            Cookies.set("token", token, {expires: Date.parse(response.data.expiration)});
-            //set token to axios common header
-            setAuthToken(token);
-      
-     //redirect user to home page
-            window.location.href = '/'
+            setSuccess("Employee registered");
+            clearErrorFlag();
           })
           .catch(err => {
             console.log(err);
-            setWrongCredentials(true);
-            setErrorMsg("Server Error");
+            clearSuccessFlag();
+            setError("Server Error");
         });
     };
 
-    function changeErrorFlag() {
-        wrongCredentials ? setWrongCredentials(false) : setWrongCredentials(true);
-        if (wrongCredentials) {
-          setErrorMsg("");
-        }
+    function setError(msg) {
+      setErrorFlag(true);
+      setErrorMsg();
+    }
+
+    function setSuccess(msg) {
+      setSuccessFlag(true);
+      setSuccessMsg(msg);
+    }
+
+    function clearErrorFlag() {
+        setErrorFlag(false);
+        setErrorMsg("");
+    }
+
+    function clearSuccessFlag() {
+      setSuccessFlag(false);
+      setSuccessMsg("");
     }
     
     return (
@@ -155,7 +164,8 @@ function RegisterPage() {
                     />
                   </div>
                 </div>
-                <ErrorBox errorFlag={wrongCredentials} changeErrorFlag={changeErrorFlag} errorMsg={errorMsg}/>
+                <ErrorBox errorFlag={errorFlag} changeErrorFlag={clearErrorFlag} errorMsg={errorMsg}/>
+                <SuccessBox successFlag={successFlag} changeSuccessFlag={clearSuccessFlag} successMsg={successMsg}/>
                 <div>
                   <button
                     type="submit"
@@ -171,4 +181,4 @@ function RegisterPage() {
       )
  }
  
- export default RegisterPage;
+ export default RegisterEmployeePage;

@@ -56,7 +56,7 @@ function LoginPage() {
           email: event.target.email.value,
           password: event.target.password.value
         }
-        axios.post("https://localhost:7298/login", loginPayload)
+        axios.post("/login", loginPayload)
           .then(response => {
             const token  =  response.data.token;
     

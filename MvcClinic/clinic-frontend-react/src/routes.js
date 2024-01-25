@@ -9,25 +9,29 @@ import { history } from './helpers/history';
 import HomePage from "./pages/Home"
 import LoginPage from "./pages/Login"
 import RegisterPage from "./pages/Register";
+import RegisterEmployeePage from "./pages/RegisterEmployee";
  
 function MyRoutes() {
    return (
        <BrowserRouter history={history}>
            <Routes>
-                <Route path="/home" element={<RouteGuard component={HomePage}/>}/>
-               <Route
-                   path="/login"
-                   element={<LoginPage/>}
-               />
+                <Route path="/home" element={<HomePage/>}/>
                 <Route
-                   path="/register"
-                   element={<RegisterPage/>}
-               />
-               <Route
+                    path="/login"
+                    element={<LoginPage/>}
+                />
+                <Route
+                    path="/register"
+                    element={<RegisterPage/>}
+                />
+                <Route
+                    path="/employee/register"
+                    element={<RouteGuard loggedIn={true} adminComponent={true} component={RegisterEmployeePage}/>}
+                />
+                <Route
                     path="*"
                     element={<Navigate to="/home" replace />}
                 />
-               {/* <Navigate to="/" replace/> */}
            </Routes>
        </BrowserRouter>
    );

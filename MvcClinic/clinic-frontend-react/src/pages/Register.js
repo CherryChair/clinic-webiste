@@ -22,7 +22,7 @@ function RegisterPage() {
           email: event.target.email.value,
           password: event.target.password.value,
         }
-        axios.post("https://localhost:7298/Patients/register", registerPayload)
+        axios.post("/Patients/register", registerPayload)
           .then(response => {
             //get token from response
             const token  =  response.data.token;
