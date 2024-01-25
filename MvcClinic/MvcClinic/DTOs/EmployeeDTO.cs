@@ -12,7 +12,7 @@ namespace MvcClinic.DTOs
         public string FirstName { get; set; }
         public string Surname { get; set; }
         public string Email { get; set; }
-        public int SpecialityId { get; set; }
+        public int ? SpecialityId { get; set; }
         public string? ConcurrencyStamp { get; set; }
     }
 }

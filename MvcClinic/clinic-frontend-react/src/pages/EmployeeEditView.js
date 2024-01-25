@@ -40,7 +40,7 @@ export default function EmployeeEditPage() {
             firstName: formData.firstName.value,
             surname: formData.surname.value,
             email: formData.email.value,
-            specialityId: formData.specialityId.value,
+            specialityId: formData.specialityId.value === "" ? -1 : formData.specialityId.value,
             concurrencyStamp: employee.concurrencyStamp,
         }
         axios.post("/Employees/edit", employeePayload).then(response => {
@@ -75,8 +75,6 @@ export default function EmployeeEditPage() {
         });
     }
 
-    console.log(employee);
-  
     return (
         <>
         <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">

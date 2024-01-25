@@ -88,8 +88,7 @@ namespace MvcClinic.Controllers
         public async Task<ActionResult<IEnumerable<EmployeeDTO>>> List()
         {
             var employees = from e in _context.Employee
-                           join s in _context.Speciality on e.Specialization.Id equals s.Id
-                           select new EmployeeDTO { Id = e.Id, FirstName = e.FirstName, Surname = e.Surname, Email = e.Email, SpecialityId = s.Id, ConcurrencyStamp = e.ConcurrencyStamp };
+                           select new EmployeeDTO { Id = e.Id, FirstName = e.FirstName, Surname = e.Surname, Email = e.Email, SpecialityId = e.Specialization.Id, ConcurrencyStamp = e.ConcurrencyStamp };
             return await employees.OrderBy(x => x.Surname).ToListAsync();
             //return await _context.Employee.Include(e => e.Specialization).OrderBy(e => e.Surname).ToListAsync();
         }
@@ -104,9 +103,8 @@ namespace MvcClinic.Controllers
             }
 
             var employees = from e in _context.Employee
-                            join s in _context.Speciality on e.Specialization.Id equals s.Id
                             where e.Id == id
-                            select new EmployeeDTO { Id = e.Id, FirstName = e.FirstName, Surname = e.Surname, Email = e.Email, SpecialityId = s.Id, ConcurrencyStamp = e.ConcurrencyStamp };
+                            select new EmployeeDTO { Id = e.Id, FirstName = e.FirstName, Surname = e.Surname, Email = e.Email, SpecialityId = e.Specialization.Id, ConcurrencyStamp = e.ConcurrencyStamp };
 
             var employee = await employees.FirstOrDefaultAsync();
             if (employee == null)

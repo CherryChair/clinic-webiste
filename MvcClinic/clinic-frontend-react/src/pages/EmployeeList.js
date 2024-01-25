@@ -71,7 +71,8 @@ export default function EmployeeListPage() {
                         speciality={item.specialityId ? specialities.find(e => e.id === item.specialityId).name : ""}
                         concurrencyStamp={item.concurrencyStamp} 
                         setErrorFunc={setError}
-                        onDelete={handleDelete}/>))
+                        onDelete={handleDelete}
+                        />))
                     }
                 </tbody>
             </table>
