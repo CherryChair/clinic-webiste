@@ -26,14 +26,9 @@ namespace MvcClinic.Controllers
         [AllowAnonymous]
         public async Task<IEnumerable<SepcializationDTO>> Index()
         {
-            var specList = await _context.Speciality.ToListAsync();
-            var dtoList = specList.Select(el => new SepcializationDTO{
-                Id = el.Id,
-                Name = el.Name
-            }
-            );
-            return dtoList;
+            var specialities = from s in _context.Speciality
+                               select new SepcializationDTO { Id = s.Id, Name = s.Name };
+            return await specialities.ToListAsync();
         }
-
     }
 }

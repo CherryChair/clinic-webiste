@@ -102,52 +102,29 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Patients
-        [HttpGet("[controller]/index")]
-        public async Task<ActionResult<IEnumerable<Patient>>> Index(string patientSurname, string searchString)
+        [HttpGet("[controller]/list")]
+        public async Task<ActionResult<IEnumerable<PatientDTO>>> List()
         {
-            if (_context.Patient == null)
-            {
-                return Problem("Entity set 'MvcClinicContext.Clinic' is null.");
-            }
-
-            // Use LINQ to get list of surnames.
-            IQueryable<string> surnameQuery = from p in _context.Patient
-                                            orderby p.Surname
-                                            select p.Surname;
-
             var patients = from p in _context.Patient
-                         select p;
-
-            if (!String.IsNullOrEmpty(searchString))
-            {
-                patients = patients.Where(s => s.FirstName!.Contains(searchString));
-            }
-
-            if (!string.IsNullOrEmpty(patientSurname))
-            {
-                patients = patients.Where(x => x.Surname == patientSurname);
-            }
-
-            //var patientSurnameVM = new PatientSurnameViewModel
-            //{
-            //    Surnames = new SelectList(await surnameQuery.Distinct().ToListAsync()),
-            //    Patients = await patients.OrderBy(x => x.Surname).ToListAsync()
-            //};
+                           select new PatientDTO { Id = p.Id, FirstName = p.FirstName, Surname = p.Surname, Email = p.Email, Active = p.Active, ConcurrencyStamp=p.ConcurrencyStamp };
 
             return await patients.OrderBy(x => x.Surname).ToListAsync();
         }
 
-        [HttpGet("[controller]/details")]
-        // GET: Patients/Details/5
-        public async Task<ActionResult<Patient>> Details(string? id)
+        [HttpGet("[controller]")]
+        public async Task<ActionResult<PatientDTO>> Details(string? id)
         {
             if (id == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            var patient = await _context.Patient
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var patients = from p in _context.Patient
+                           where p.Id == id
+                           select new PatientDTO { Id=p.Id, FirstName = p.FirstName, Surname = p.Surname, Email = p.Email, Active = p.Active, ConcurrencyStamp=p.ConcurrencyStamp };
+
+            var patient = await patients
+                .FirstOrDefaultAsync();
             if (patient == null)
             {
                 return NotFound();
@@ -156,58 +133,30 @@ namespace MvcClinic.Controllers
             return patient;
         }
 
-        // GET: Patients/Edit/5
-        [HttpGet("[controller]/edit")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult<PatientEditViewDTO>> Edit(string? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var patient = await _context.Patient
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (patient == null)
-            {
-                return NotFound();
-            }
-            return new PatientEditViewDTO{ 
-                Id = patient.Id, 
-                FirstName = patient.FirstName, 
-                Surname=patient.Surname, 
-                Active=patient.Active, 
-                ConcurrencyStamp = patient.ConcurrencyStamp
-            };
-        }
-
         // POST: Patients/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("[controller]/edit")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientEditViewDTO patientEditViewModel)
+        public async Task<ActionResult> Edit([Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientDTO patientDTO)
         {
-            var newFirstName = patientEditViewModel.FirstName;
-            var newSurname = patientEditViewModel.Surname;
-            var newActive = patientEditViewModel.Active;
 
-            if (id != patientEditViewModel.Id || id == null)
+            if (patientDTO.Id == null)
             {
                 return NotFound();
             }
 
-            var patient = await _context.Patient.FindAsync(id);
+            var patient = await _context.Patient.FindAsync(patientDTO.Id);
 
             if (patient == null)
             {
                 return NotFound();
             }
 
-            patient.FirstName = newFirstName;
-            patient.Surname = newSurname;
-            patient.Active = newActive;
-            _context.Entry(patient).OriginalValues["ConcurrencyStamp"] = patientEditViewModel.ConcurrencyStamp;
+            patient.FirstName = patientDTO.FirstName;
+            patient.Surname = patientDTO.Surname;
+            patient.Active = patientDTO.Active;
+            _context.Entry(patient).OriginalValues["ConcurrencyStamp"] = patientDTO.ConcurrencyStamp;
 
             if (ModelState.IsValid)
             {
@@ -238,26 +187,6 @@ namespace MvcClinic.Controllers
             //patientEditViewModel.ConcurrencyStamp = patient.ConcurrencyStamp;
 
             return Ok();
-        }
-
-        // GET: Patients/Delete/5
-        [HttpGet("[controller]/delete")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult<Patient>> Delete(string? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var patient = await _context.Patient
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (patient == null)
-            {
-                return NotFound();
-            }
-
-            return patient;
         }
 
         // POST: Patients/Delete/5
