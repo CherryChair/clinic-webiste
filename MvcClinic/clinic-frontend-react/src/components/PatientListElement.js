@@ -60,7 +60,7 @@ export default function PatientListElement({id, firstName, surname, email, activ
             </td>
             {admin &&
                 <td className="px-6 py-4 text-right">
-                    <a href={"/patient/"+{id}} className="font-medium text-blue-600 hover:underline">Edit</a>
+                    <a href={"/patient/"+ id } className="font-medium text-blue-600 hover:underline">Edit</a>
                     {" "}
                     <button onClick={activate} className="font-medium text-blue-600 hover:underline">{active ? "Deactivate" : "Activate"}</button>
                     {" "}

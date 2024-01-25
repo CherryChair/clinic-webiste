@@ -112,12 +112,14 @@ namespace MvcClinic.Controllers
         }
 
         [HttpGet("[controller]")]
-        public async Task<ActionResult<PatientDTO>> Details(string? id)
+        public async Task<ActionResult<PatientDTO>> Details([FromQuery]string? id)
         {
             if (id == null)
             {
                 return BadRequest();
             }
+            Console.WriteLine("HERRE");
+            Console.WriteLine(id);
 
             var patients = from p in _context.Patient
                            where p.Id == id
@@ -127,7 +129,7 @@ namespace MvcClinic.Controllers
                 .FirstOrDefaultAsync();
             if (patient == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             return patient;

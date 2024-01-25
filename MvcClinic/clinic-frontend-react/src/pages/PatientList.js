@@ -25,7 +25,6 @@ export default function PatientListPage() {
     };
 
     const setError = (msg) => {
-        getPatients();
         setErrorMsg(msg);
         setErrorFlag(true);
     };
