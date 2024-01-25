@@ -15,6 +15,8 @@ function RegisterEmployeePage() {
 
     function handleSubmit(event) {
         event.preventDefault();
+        clearSuccessFlag();
+        clearErrorFlag();
         if (event.target.password.value !== event.target.confirmedPassword.value) {
           setErrorFlag(true);
           setErrorMsg("Passwords don't match");
@@ -31,11 +33,9 @@ function RegisterEmployeePage() {
         axios.post("/Employees/register", registerPayload)
           .then(response => {
             setSuccess("Employee registered");
-            clearErrorFlag();
           })
           .catch(err => {
             console.log(err);
-            clearSuccessFlag();
             if (err.response.status === 409) {
               setError("Email registered");
             } else {

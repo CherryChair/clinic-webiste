@@ -7,6 +7,7 @@ import ButtonAccept from "../components/ButtonAccept";
 import ButtonCancel from "../components/ButtonCancel";
 import FormField from "../components/FormField";
 import SpecialitiesFormField from "../components/SpecialitiesFormField";
+import SuccessBox from "../components/SuccessBox";
 
 
 export default function EmployeeEditPage() {
@@ -15,6 +16,8 @@ export default function EmployeeEditPage() {
     const [employee, setEmployee] = useState(Object());
     const [errorFlag, setErrorFlag] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+    const [successFlag, setSuccessFlag] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
 
     useEffect(() => {
         axios.get(`/Employees/?id=${params.id}`).then(response => {
@@ -31,8 +34,20 @@ export default function EmployeeEditPage() {
         setErrorMsg("");
         setErrorFlag(false);
     };
+
+    function setSuccess(msg) {
+        setSuccessFlag(true);
+        setSuccessMsg(msg);
+    };
+
+    function clearSuccessFlag() {
+        setSuccessFlag(false);
+        setSuccessMsg("");
+    }
     
     const handleSubmit = event => {
+        clearErrorFlag();
+        clearSuccessFlag();
         event.preventDefault();
         let formData = event.target;
         let employeePayload = {
@@ -47,8 +62,11 @@ export default function EmployeeEditPage() {
             let tempEmp = employee;
             tempEmp.concurrencyStamp = response.data;
             setEmployee(tempEmp);
+            clearErrorFlag();
+            setSuccess("Employee updated");
         }).catch(err => {
             console.log(err);
+            clearSuccessFlag();
             if (err.response.status === 409) {
                 setError("Employee data was changed");
             } else {
@@ -85,6 +103,7 @@ export default function EmployeeEditPage() {
           </div>
   
           <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
+            <SuccessBox successFlag={successFlag} changeSuccessFlag={clearSuccessFlag} successMsg={successMsg}/>
             <ErrorBox errorFlag={errorFlag} changeErrorFlag={clearErrorFlag} errorMsg={errorMsg}/>
             <form className="space-y-6" onSubmit={handleSubmit}>
                 <FormField type="text" attr="firstName" label="First name" defaultValue={employee.firstName}/>

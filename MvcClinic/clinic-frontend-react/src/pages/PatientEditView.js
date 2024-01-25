@@ -7,6 +7,7 @@ import { isAdmin } from "./Login";
 import ButtonAccept from "../components/ButtonAccept";
 import ButtonCancel from "../components/ButtonCancel";
 import FormField from "../components/FormField";
+import SuccessBox from "../components/SuccessBox";
 
 
 export default function PatientEditPage() {
@@ -15,6 +16,8 @@ export default function PatientEditPage() {
     const [patient, setPatient] = useState(Object());
     const [errorFlag, setErrorFlag] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+    const [successFlag, setSuccessFlag] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
 
     let doctor = !isAdmin();
 
@@ -33,8 +36,20 @@ export default function PatientEditPage() {
         setErrorMsg("");
         setErrorFlag(false);
     };
+
+    function setSuccess(msg) {
+        setSuccessFlag(true);
+        setSuccessMsg(msg);
+    }
+
+    function clearSuccessFlag() {
+        setSuccessFlag(false);
+        setSuccessMsg("");
+    }
     
     const handleSubmit = event => {
+        clearErrorFlag();
+        clearSuccessFlag();
         event.preventDefault();
         let formData = event.target;
         let patientPayload = {
@@ -49,6 +64,7 @@ export default function PatientEditPage() {
             let tempPat = patient;
             tempPat.concurrencyStamp = response.data;
             setPatient(tempPat);
+            setSuccess("Saved patiend");
         }).catch(err => {
             console.log(err);
             if (err.response.status === 409) {
@@ -87,6 +103,7 @@ export default function PatientEditPage() {
           </div>
   
           <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
+            <SuccessBox successFlag={successFlag} changeSuccessFlag={clearSuccessFlag} successMsg={successMsg}/>
             <ErrorBox errorFlag={errorFlag} changeErrorFlag={clearErrorFlag} errorMsg={errorMsg}/>
             {/* <form className="space-y-6" action="#" method="POST"> */}
             <form className="space-y-6" onSubmit={handleSubmit}>
