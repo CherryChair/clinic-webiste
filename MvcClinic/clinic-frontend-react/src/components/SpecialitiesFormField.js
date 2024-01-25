@@ -20,7 +20,6 @@ export default function SpecialitiesFormField({className, defaultValue}) {
       }).catch(error => console.log(error));
     }
 
-
     return (
       <div>
         <div className="flex items-center justify-between">
@@ -29,10 +28,10 @@ export default function SpecialitiesFormField({className, defaultValue}) {
           </label>
         </div>
         <div className="mt-2">
-          <select id="specialityId" defaultValue={defaultValue ? defaultValue : ""} className={css}>
+          <select id="specialityId" className={css}>
             <option value="" key=""></option>
             {specialities.map((item) => (
-              <option value={item.id} key={item.id}>{item.name}</option>
+              <option value={item.id} key={item.id} selected={item.id===defaultValue}>{item.name}</option>
               ))}
           </select>
         </div>

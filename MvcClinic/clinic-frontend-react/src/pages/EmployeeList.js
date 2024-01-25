@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import EmployeeListElement from "../components/EmployeeListElement";
 import axios from "axios";
 import ErrorBox from "../components/ErrorBox";
-import { isAdmin } from "./Login"
 
 
 export default function EmployeeListPage() {
@@ -15,8 +14,7 @@ export default function EmployeeListPage() {
     useEffect(() => {
         getEmployees();
         getSpecialities();
-    }, []);
-    
+    }, []);    
     
     const getEmployees = () => {
         axios.get("/Employees/list").then(response => {
@@ -70,7 +68,7 @@ export default function EmployeeListPage() {
                         firstName={item.firstName} 
                         surname={item.surname} 
                         email={item.email} 
-                        speciality={item.specialityId ? specialities[item.specialityId] : ""}
+                        speciality={item.specialityId ? specialities.find(e => e.id === item.specialityId).name : ""}
                         concurrencyStamp={item.concurrencyStamp} 
                         setErrorFunc={setError}
                         onDelete={handleDelete}/>))

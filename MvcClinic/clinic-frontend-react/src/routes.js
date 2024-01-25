@@ -12,6 +12,8 @@ import RegisterPage from "./pages/Register";
 import RegisterEmployeePage from "./pages/RegisterEmployee";
 import PatientListPage from "./pages/PatientList";
 import PatientEditPage from "./pages/PatientEditView";
+import EmployeeListPage from "./pages/EmployeeList";
+import EmployeeEditPage from "./pages/EmployeeEditView";
  
 function MyRoutes() {
    return (
@@ -37,6 +39,14 @@ function MyRoutes() {
                 <Route
                     path="/patient/:id"
                     element={<RouteGuard loggedIn={true} doctorComponent={true} adminComponent={true} component={PatientEditPage}/>}
+                />
+                <Route
+                    path="/employees"
+                    element={<RouteGuard loggedIn={true} adminComponent={true} component={EmployeeListPage}/>}
+                />
+                <Route
+                    path="/employee/:id"
+                    element={<RouteGuard loggedIn={true} adminComponent={true} component={EmployeeEditPage}/>}
                 />
                 <Route
                     path="*"

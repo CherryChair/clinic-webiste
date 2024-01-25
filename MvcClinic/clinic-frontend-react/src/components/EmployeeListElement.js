@@ -1,6 +1,4 @@
 import axios from "axios";
-import { useState } from "react";
-import { CheckIcon, XMarkIcon  } from '@heroicons/react/24/outline'
 
 export default function EmployeeListElement({id, firstName, surname, email, speciality, concurrencyStamp, setErrorFunc, onDelete}) {
 

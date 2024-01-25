@@ -74,6 +74,8 @@ export default function EmployeeEditPage() {
             }
         });
     }
+
+    console.log(employee);
   
     return (
         <>
@@ -90,7 +92,7 @@ export default function EmployeeEditPage() {
                 <FormField type="text" attr="firstName" label="First name" defaultValue={employee.firstName}/>
                 <FormField type="text" attr="surname" label="Surname" defaultValue={employee.surname}/>
                 <FormField type="email" attr="email" label="Email address" defaultValue={employee.email}/>
-                <SpecialitiesFormField defaultValue={employee.speciality.id}/>
+                <SpecialitiesFormField defaultValue={employee.specialityId}/>
                 <div className="flex">
                     <ButtonAccept type="submit" className="w-6/12" text="Save"/>
                     <ButtonCancel className="w-6/12 ml-1" text="Delete" onClick={handleDelete}/>
