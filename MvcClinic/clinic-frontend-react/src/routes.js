@@ -10,6 +10,7 @@ import HomePage from "./pages/Home"
 import LoginPage from "./pages/Login"
 import RegisterPage from "./pages/Register";
 import RegisterEmployeePage from "./pages/RegisterEmployee";
+import PatientListPage from "./pages/PatientList";
  
 function MyRoutes() {
    return (
@@ -30,7 +31,7 @@ function MyRoutes() {
                 />
                 <Route
                     path="/patients"
-                    element={<RouteGuard loggedIn={true} doctorComponent={true} adminComponent={true} component={RegisterEmployeePage}/>}
+                    element={<RouteGuard loggedIn={true} doctorComponent={true} adminComponent={true} component={PatientListPage}/>}
                 />
                 <Route
                     path="*"
