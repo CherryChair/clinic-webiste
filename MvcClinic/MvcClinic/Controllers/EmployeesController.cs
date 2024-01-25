@@ -77,7 +77,7 @@ namespace MvcClinic.Controllers
 
             if (result.Succeeded)
             {
-                await _employeeManager.AddClaimAsync(employee, new Claim("IsEmployee", "true"));
+                await _employeeManager.AddClaimAsync(employee, new Claim("IsDoctor", "true"));
                 return Ok();
             }
             return BadRequest();

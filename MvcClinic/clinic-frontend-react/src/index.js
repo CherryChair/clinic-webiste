@@ -10,11 +10,7 @@ axios.defaults.baseURL = 'https://localhost:7298';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <html class="h-full bg-white">
-      <body class="h-full">
-        <App />
-      </body>
-    </html>
+      <App />
   </React.StrictMode>
 );
 

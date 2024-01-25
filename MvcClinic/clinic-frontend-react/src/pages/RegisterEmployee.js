@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ErrorBox from '../components/ErrorBox';
 import SuccessBox from '../components/SuccessBox';
 
@@ -9,11 +9,19 @@ function RegisterEmployeePage() {
     const [errorMsg, setErrorMsg] = useState("");
     const [successFlag, setSuccessFlag] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
+    const [specialities, setSpecialities] = useState([]);
+
+    useEffect(() => {
+      getSpecialities();
+    }, []);
     const passwordClassName = "block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6";
     
-    let specialities;
 
-    // axios.get("")
+    const getSpecialities = () => {
+      axios.get("/Specialities/list").then(response => {
+      setSpecialities(response.data);
+      }).catch(error => console.log(error));
+    }
 
     function handleSubmit(event) {
         event.preventDefault();
@@ -27,8 +35,10 @@ function RegisterEmployeePage() {
           surname: event.target.surname.value,
           email: event.target.email.value,
           password: event.target.password.value,
+          specializationId: event.target.specialityId.value,
         }
-        axios.post("/Employee/register", registerPayload)
+        console.log(registerPayload);
+        axios.post("/Employees/register", registerPayload)
           .then(response => {
             setSuccess("Employee registered");
             clearErrorFlag();
@@ -42,7 +52,7 @@ function RegisterEmployeePage() {
 
     function setError(msg) {
       setErrorFlag(true);
-      setErrorMsg();
+      setErrorMsg(msg);
     }
 
     function setSuccess(msg) {
@@ -51,8 +61,8 @@ function RegisterEmployeePage() {
     }
 
     function clearErrorFlag() {
-        setErrorFlag(false);
-        setErrorMsg("");
+      setErrorFlag(false);
+      setErrorMsg("");
     }
 
     function clearSuccessFlag() {
@@ -130,6 +140,22 @@ function RegisterEmployeePage() {
                     />
                   </div>
                 </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="specialityId" className="block text-sm font-medium leading-6 text-gray-900">
+                      Speciality
+                    </label>
+                  </div>
+                  <div className="mt-2">
+                    <select id="specialityId" defaultValue="" className="block w-full rounded-md border-1 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                      <option value="" key=""></option>
+                      {specialities.map((item) => (
+                        <option value={item.id} key={item.id}>{item.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
     
                 <div>
                   <div className="flex items-center justify-between">
@@ -147,6 +173,7 @@ function RegisterEmployeePage() {
                     />
                   </div>
                 </div>
+
                 <div>
                   <div className="flex items-center justify-between">
                     <label htmlFor="confirmedPassword" className="block text-sm font-medium leading-6 text-gray-900">
