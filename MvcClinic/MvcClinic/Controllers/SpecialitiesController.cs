@@ -8,10 +8,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MvcClinic.Data;
 using MvcClinic.Models;
+using MvcClinic.DTOs;
 
 namespace MvcClinic.Controllers
 {
-    [Authorize]
     public class SpecialitiesController : Controller
     {
         private readonly MvcClinicContext _context;
@@ -23,9 +23,16 @@ namespace MvcClinic.Controllers
 
         // GET: Specialities
         [HttpGet("[controller]/list")]
-        public async Task<ActionResult<ICollection<Speciality>>> Index()
+        [AllowAnonymous]
+        public async Task<IEnumerable<SepcializationDTO>> Index()
         {
-            return await _context.Speciality.ToListAsync();
+            var specList = await _context.Speciality.ToListAsync();
+            var dtoList = specList.Select(el => new SepcializationDTO{
+                Id = el.Id,
+                Name = el.Name
+            }
+            );
+            return dtoList;
         }
 
     }
