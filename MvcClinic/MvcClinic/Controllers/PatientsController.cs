@@ -29,7 +29,7 @@ namespace MvcClinic.Controllers
         private readonly IUserStore<Patient> _userStore;
         private readonly IUserEmailStore<Patient> _emailStore;
         private readonly IConfiguration _configuration;
-        public PatientsController(MvcClinicContext context, UserManager<Patient> patientManager, UserManager<UserAccount> userManager, IConfiguration configuration, 
+        public PatientsController(MvcClinicContext context, UserManager<Patient> patientManager, UserManager<UserAccount> userManager, IConfiguration configuration,
                 IUserStore<Patient> userStore)
         {
             _context = context;
@@ -106,7 +106,7 @@ namespace MvcClinic.Controllers
         public async Task<ActionResult<IEnumerable<PatientDTO>>> List()
         {
             var patients = from p in _context.Patient
-                           select new PatientDTO { Id = p.Id, FirstName = p.FirstName, Surname = p.Surname, Email = p.Email, Active = p.Active, ConcurrencyStamp=p.ConcurrencyStamp };
+                           select new PatientDTO { Id = p.Id, FirstName = p.FirstName, Surname = p.Surname, Email = p.Email, Active = p.Active, ConcurrencyStamp = p.ConcurrencyStamp };
 
             return await patients.OrderBy(x => x.Surname).ToListAsync();
         }
@@ -121,7 +121,7 @@ namespace MvcClinic.Controllers
 
             var patients = from p in _context.Patient
                            where p.Id == id
-                           select new PatientDTO { Id=p.Id, FirstName = p.FirstName, Surname = p.Surname, Email = p.Email, Active = p.Active, ConcurrencyStamp=p.ConcurrencyStamp };
+                           select new PatientDTO { Id = p.Id, FirstName = p.FirstName, Surname = p.Surname, Email = p.Email, Active = p.Active, ConcurrencyStamp = p.ConcurrencyStamp };
 
             var patient = await patients
                 .FirstOrDefaultAsync();
@@ -138,19 +138,19 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("[controller]/edit")]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult> Edit([Bind("Id,FirstName,Surname,Active,ConcurrencyStamp")] PatientDTO patientDTO)
+        public async Task<ActionResult<string>> Edit([FromBody] PatientDTO patientDTO)
         {
 
             if (patientDTO.Id == null)
             {
-                return NotFound();
+                return NotFound("id");
             }
 
             var patient = await _context.Patient.FindAsync(patientDTO.Id);
 
             if (patient == null)
             {
-                return NotFound();
+                return NotFound("patient");
             }
 
             patient.FirstName = patientDTO.FirstName;
@@ -174,7 +174,7 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        return BadRequest("Concurrency exception");
+                        return Conflict("Concurrency exception");
                         //TempData["ConcurrencyExceptionPatient"] = true;
                         //await _context.Entry(patient).ReloadAsync();
                         //patientEditViewModel.FirstName = patient.FirstName;
@@ -186,7 +186,7 @@ namespace MvcClinic.Controllers
             //ModelState.Clear();
             //patientEditViewModel.ConcurrencyStamp = patient.ConcurrencyStamp;
 
-            return Ok();
+            return patient.ConcurrencyStamp;
         }
 
         // POST: Patients/Delete/5

@@ -4,18 +4,27 @@ import { CheckIcon, XMarkIcon  } from '@heroicons/react/24/outline'
 
 export default function PatientListElement({id, firstName, surname, email, activated, concurrencyStamp, setErrorFunc}) {
     const [active, setActive] = useState(activated);
+    const [ccStump, setCcStump] = useState(concurrencyStamp);
     const activate = () => {
         let patientPayload = {
             id: id,
             firstName: firstName,
             surname: surname,
             email: email,
-            activate: !active,
-            concurrencyStamp: concurrencyStamp,
+            active: !active,
+            concurrencyStamp: ccStump,
         }//pobieramy i ustawiamy nowe concurrency stamp
-        axios.post("Patients", patientPayload).then(response => {
+        axios.post("/Patients/edit", patientPayload).then(response => {
             setActive(!active);
-        }).catch(err => console.log("err"));
+            setCcStump(response.data);
+        }).catch(err => {
+            console.log(err);
+            if (err.response.status === 409) {
+                setErrorFunc("Patient data was changed");
+            } else {
+                setErrorFunc("Not found");
+            }
+        });
     }
     return (
         <tr className="bg-white hover:bg-gray-50 ">
@@ -33,9 +42,9 @@ export default function PatientListElement({id, firstName, surname, email, activ
             <td className="px-6 py-4 text-right">
                 <a href={"/patient/"+{id}} className="font-medium text-blue-600 hover:underline">Edit</a>
                 {" "}
-                <button onClick={activate} className="font-medium text-blue-600 hover:underline">Activate</button>
+                <button onClick={activate} className="font-medium text-blue-600 hover:underline">{active ? "Deactivate" : "Activate"}</button>
                 {" "}
-                <button onClick={() => setErrorFunc("Test error")} className="font-medium text-blue-600 hover:underline">Error</button>
+                <button onClick={() => setErrorFunc("Test error")} className="font-medium text-blue-600 hover:underline">Delete</button>
             </td>
         </tr>
     );
