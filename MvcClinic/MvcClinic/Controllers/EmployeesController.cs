@@ -53,7 +53,7 @@ namespace MvcClinic.Controllers
         }
 
         [HttpPost("[controller]/register")]
-        public async Task<ActionResult<Employee>> Register([FromBody] RegisterEmployeeDTO model)
+        public async Task<ActionResult> Register([FromBody] RegisterEmployeeDTO model)
         {
             if (model.Email == null || model.Password == null || model.FirstName == null || model.Surname == null)
             {
@@ -78,25 +78,7 @@ namespace MvcClinic.Controllers
             if (result.Succeeded)
             {
                 await _employeeManager.AddClaimAsync(employee, new Claim("IsEmployee", "true"));
-                var tokenClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Email, model.Email),
-                };
-                var userClaims = await _employeeManager.GetClaimsAsync(employee);
-                tokenClaims.AddRange(userClaims);
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["JWT:ValidIssuer"],
-                    audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(3),
-                    claims: tokenClaims,
-                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                );
-                return Ok(new
-                {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
-                });
+                return Ok();
             }
             return BadRequest();
         }
