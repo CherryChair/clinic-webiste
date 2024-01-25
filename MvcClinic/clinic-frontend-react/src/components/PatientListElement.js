@@ -58,15 +58,19 @@ export default function PatientListElement({id, firstName, surname, email, activ
                     <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
                 }
             </td>
-            {admin &&
-                <td className="px-6 py-4 text-right">
-                    <a href={"/patient/"+ id } className="font-medium text-blue-600 hover:underline">Edit</a>
-                    {" "}
-                    <button onClick={activate} className="font-medium text-blue-600 hover:underline">{active ? "Deactivate" : "Activate"}</button>
-                    {" "}
-                    <button onClick={deletePatient} className="font-medium text-blue-600 hover:underline">Delete</button>
-                </td>
-            }
+            <td className="px-6 py-4 text-right">
+                {admin ? 
+                    <>
+                        <a href={"/patient/"+ id } className="font-medium text-blue-600 hover:underline">Edit</a>
+                        {" "}
+                        <button onClick={activate} className="font-medium text-blue-600 hover:underline">{active ? "Deactivate" : "Activate"}</button>
+                        {" "}
+                        <button onClick={deletePatient} className="font-medium text-blue-600 hover:underline">Delete</button>
+                    </>
+                    :
+                    <a href={"/patient/"+ id } className="font-medium text-blue-600 hover:underline">Details</a>
+                }
+            </td>
         </tr>
     );
 }
