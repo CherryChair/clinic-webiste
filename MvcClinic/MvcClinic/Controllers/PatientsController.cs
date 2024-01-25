@@ -112,24 +112,21 @@ namespace MvcClinic.Controllers
         }
 
         [HttpGet("[controller]")]
-        public async Task<ActionResult<PatientDTO>> Details([FromQuery]string? id)
+        public async Task<ActionResult<PatientDTO>> Details([FromQuery] string? id)
         {
             if (id == null)
             {
-                return BadRequest();
+                return NotFound();
             }
-            Console.WriteLine("HERRE");
-            Console.WriteLine(id);
 
             var patients = from p in _context.Patient
                            where p.Id == id
                            select new PatientDTO { Id = p.Id, FirstName = p.FirstName, Surname = p.Surname, Email = p.Email, Active = p.Active, ConcurrencyStamp = p.ConcurrencyStamp };
 
-            var patient = await patients
-                .FirstOrDefaultAsync();
+            var patient = await patients.FirstOrDefaultAsync();
             if (patient == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
             return patient;
@@ -157,6 +154,7 @@ namespace MvcClinic.Controllers
 
             patient.FirstName = patientDTO.FirstName;
             patient.Surname = patientDTO.Surname;
+            patient.Email = patientDTO.Email;
             patient.Active = patientDTO.Active;
             _context.Entry(patient).OriginalValues["ConcurrencyStamp"] = patientDTO.ConcurrencyStamp;
 

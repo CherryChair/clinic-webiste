@@ -84,24 +84,30 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Employees
-        [HttpGet("[controller]/index")]
-        public async Task<ActionResult<IEnumerable<Employee>>> Index()
+        [HttpGet("[controller]/list")]
+        public async Task<ActionResult<IEnumerable<EmployeeDTO>>> List()
         {
-            return Ok(await _context.Employee.Include(e => e.Specialization).OrderBy(e => e.Surname).ToListAsync());
+            var employees = from e in _context.Employee
+                           join s in _context.Speciality on e.Specialization.Id equals s.Id
+                           select new EmployeeDTO { Id = e.Id, FirstName = e.FirstName, Surname = e.Surname, Email = e.Email, SpecialityId = s.Id, ConcurrencyStamp = e.ConcurrencyStamp };
+            return await employees.OrderBy(x => x.Surname).ToListAsync();
             //return await _context.Employee.Include(e => e.Specialization).OrderBy(e => e.Surname).ToListAsync();
         }
 
         // GET: Employees/Details/5
-        [HttpGet("[controller]/details")]
-        public async Task<ActionResult<Employee>> Details(string? id)
+        [HttpGet("[controller]")]
+        public async Task<ActionResult<EmployeeDTO>> Details([FromQuery] string? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var employee = await _context.Employee.Include(e => e.Specialization)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var employees = from e in _context.Employee
+                            join s in _context.Speciality on e.Specialization.Id equals s.Id
+                            select new EmployeeDTO { Id = e.Id, FirstName = e.FirstName, Surname = e.Surname, Email = e.Email, SpecialityId = s.Id, ConcurrencyStamp = e.ConcurrencyStamp };
+
+            var employee = await employees.FirstOrDefaultAsync();
             if (employee == null)
             {
                 return NotFound();
@@ -110,65 +116,36 @@ namespace MvcClinic.Controllers
             return employee;
         }
 
-        [HttpGet("[controller]/edit")]
-        // GET: Employees/Edit/5
-        public async Task<ActionResult<EmployeeEditViewDTO>> Edit(string? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            IQueryable<string> specialityQuery = from p in _context.Speciality
-                                                 select p.Name;
-            var specialities = new SelectList(await specialityQuery.Distinct().ToListAsync());
-
-            var employee = await _context.Employee.Include(e => e.Specialization)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (employee == null)
-            {
-                return NotFound();
-            }
-
-            string? spec = "";
-            if (employee.Specialization != null)
-            {
-                spec = employee.Specialization.Name;
-            }
-            return new EmployeeEditViewDTO { 
-                Id=employee.Id,
-                FirstName=employee.FirstName,
-                Surname=employee.Surname,
-                Speciality=spec,
-                Specialities=specialities,
-                ConcurrencyStamp=employee.ConcurrencyStamp,
-            };
-        }
-
         // POST: Employees/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("[controller]/edit")]
-        public async Task<ActionResult> Edit(string id, [Bind("Id,FirstName,Surname,Speciality,ConcurrencyStamp")] EmployeeEditViewDTO employeeEditViewModel)
+        public async Task<ActionResult<string>> Edit([FromBody] EmployeeDTO employeeDTO)
         {
-            if (id != employeeEditViewModel.Id)
+            if (employeeDTO.Id == null)
             {
                 return NotFound();
             }
+            //IQueryable<string> specialityQuery = from p in _context.Speciality
+            //                                     select p.Name;
+            //var specialities = new SelectList(await specialityQuery.Distinct().ToListAsync());
 
-            var employee = await _context.Employee.Include(m => m.Specialization).FirstOrDefaultAsync(m => m.Id == id);
+            var employee = await _context.Employee.Include(e => e.Specialization)
+                .FirstOrDefaultAsync(m => m.Id == employeeDTO.Id);
 
             if (employee == null)
             {
                 return NotFound();
             }
 
-            employee.FirstName = employeeEditViewModel.FirstName;
-            employee.Surname = employeeEditViewModel.Surname;
+            employee.FirstName = employeeDTO.FirstName;
+            employee.Surname = employeeDTO.Surname;
+            employee.Email = employeeDTO.Email;
 
-            var spec = await _context.Speciality.FirstOrDefaultAsync(m => m.Name == employeeEditViewModel.Speciality);
-            employee.Specialization = spec;
+            var speciality = await _context.Speciality.FirstOrDefaultAsync(s => s.Id == employeeDTO.SpecialityId);
+            employee.Specialization = speciality;
 
-            _context.Entry(employee).OriginalValues["ConcurrencyStamp"] = employeeEditViewModel.ConcurrencyStamp;
+            _context.Entry(employee).OriginalValues["ConcurrencyStamp"] = employeeDTO.ConcurrencyStamp;
 
             if (ModelState.IsValid)
             {
@@ -186,60 +163,23 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        return BadRequest("Concurrency exception");
-                        //TempData["ConcurrencyExceptionEmployee"] = true;
-                        //await _context.Entry(employee).ReloadAsync();
-                        //employeeEditViewModel.FirstName = employee.FirstName;
-                        //employeeEditViewModel.Surname = employee.Surname;
-                        //if (employee.Specialization != null)
-                        //{
-                        //    employeeEditViewModel.Speciality = employee.Specialization.Name;
-                        //} else
-                        //{
-                        //    employeeEditViewModel.Speciality = "";
-                        //}
+                        return Conflict("Concurrency exception");
                     }
                 }
             }
-            //ModelState.Clear();
-            //employeeEditViewModel.ConcurrencyStamp = employee.ConcurrencyStamp;
 
-            //IQueryable<string> specialityQuery = from p in _context.Speciality
-            //                                     select p.Name;
-            //var specialities = new SelectList(await specialityQuery.Distinct().ToListAsync());
-            //employeeEditViewModel.Specialities= specialities;
-
-            return NoContent();
-        }
-
-        // GET: Employees/Delete/5
-        [HttpGet("[controller]/delete")]
-        public async Task<ActionResult<Employee>> Delete(string? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var employee = await _context.Employee.Include(e => e.Specialization)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (employee == null)
-            {
-                return NotFound();
-            }
-
-            return employee;
+            return employee.ConcurrencyStamp;
         }
 
         // POST: Employees/Delete/5
         [HttpPost("[controller]/delete")]
-        public async Task<ActionResult> DeleteConfirmed(string id, string? concurrencyStamp)
+        public async Task<ActionResult> DeleteConfirmed([FromBody] DeleteDTO requestBody)
         {
-            var employee = await _context.Employee.FindAsync(id);
+            var employee = await _context.Employee.FindAsync(requestBody.Id);
 
             if (employee != null)
             {
-                _context.Entry(employee).OriginalValues["ConcurrencyStamp"] = concurrencyStamp;
+                _context.Entry(employee).OriginalValues["ConcurrencyStamp"] = requestBody.ConcurrencyStamp;
                 try
                 {
                     _context.Employee.Remove(employee);
