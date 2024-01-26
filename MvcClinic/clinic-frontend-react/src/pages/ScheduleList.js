@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import ScheduleListElement from "../components/ScheduleListElement";
 import axios from "axios";
 import ErrorBox from "../components/ErrorBox";
+import ButtonAccept from "../components/ButtonAccept";
 
 
 export default function ScheduleListPage() {
@@ -41,6 +42,7 @@ export default function ScheduleListPage() {
   
     return (
         <div className="relative overflow-x-auto shadow-md sm:rounded-lg w-9/12 m-auto mt-16">
+            <ButtonAccept onClick={() => {window.location.href = "/schedules/create"}} text={"Create"} className={"w-20 m-2"}/>
             <ErrorBox changeErrorFlag={clearErrorFlag} errorFlag={errorFlag} errorMsg={errorMsg}/>
             <table className="w-full text-sm text-left rtl:text-right text-gray-500 ">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50  ">

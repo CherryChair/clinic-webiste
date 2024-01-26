@@ -15,6 +15,7 @@ import PatientEditPage from "./pages/PatientEditView";
 import EmployeeListPage from "./pages/EmployeeList";
 import EmployeeEditPage from "./pages/EmployeeEditView";
 import ScheduleListPage from "./pages/ScheduleList";
+import ScheduleCreatePage from "./pages/ScheduleCreateView";
  
 function MyRoutes() {
    return (
@@ -52,6 +53,10 @@ function MyRoutes() {
                 <Route
                     path="/schedules"
                     element={<RouteGuard loggedIn={true} adminComponent={true} doctorComponent={true} patientComponent={true} component={ScheduleListPage}/>}
+                />
+                <Route
+                    path="/schedules/create"
+                    element={<RouteGuard loggedIn={true} adminComponent={true} component={ScheduleCreatePage}/>}
                 />
                 <Route
                     path="*"

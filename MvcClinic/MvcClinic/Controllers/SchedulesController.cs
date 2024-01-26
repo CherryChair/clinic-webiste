@@ -172,120 +172,114 @@ namespace MvcClinic.Controllers
         //    };
         //}
 
-        [HttpPost("[controller]/copyFromLastWeek")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult> CopyFromLastWeek(bool? dummy)
-        {
-            DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
-            DateTime endOfWeek = startOfWeek.AddDays(7);
-            DateTime endOfNextWeek = startOfWeek.AddDays(14);
-
-            var newSchedules = await _context.Schedule
-                .Include(s => s.Doctor)
-                .Include(s => s.Doctor.Specialization)
-                .Where(s => (startOfWeek <= s.Date && s.Date <= endOfWeek))
-                .OrderBy(s => s.Date).ToListAsync();
-
-
-            newSchedules.ForEach(el => { 
-                _context.Entry(el).State = EntityState.Detached;
-                el.Date = el.Date.AddDays(7); 
-                el.Id = 0;
-                el.Patient = null;
-                el.Description = null;
-            });
-
-            newSchedules.RemoveAll(el => {
-                if (el.Doctor != null && IsWithin15Minutes(el.Doctor, el.Date, null))
-                {
-                    return true;
-                }
-                return false;
-            });
-
-
-            await _context.AddRangeAsync(newSchedules);
-            await _context.SaveChangesAsync();
-
-            //return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = startOfWeek, DateTo = endOfWeek});
-            return Ok();
-        }
-
-        [HttpGet("[controller]/generateReport")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult<ScheduleReportViewDTO>> GenerateReport(DateOnly dateFrom, DateOnly dateTo)
-        {
-            var doctors = await _context.Employee.Include(d => d.Specialization).ToListAsync();
-            DateTime dateTimeFrom = dateFrom.ToDateTime(TimeOnly.MinValue);
-            DateTime dateTimeTo = dateTo.ToDateTime(TimeOnly.MinValue);
-
-
-            List<ReportEntry> reportEntries = new List<ReportEntry>();
-
-            if(dateTimeFrom >= dateTimeTo)
-            {
-                //TempData["WrongDates"] = true;
-                return BadRequest("Wrong dates");
-                //return View(new ScheduleReportViewModel { DateFrom=dateFrom, DateTo=dateTo, ReportEntries=reportEntries });
-            }
-
-            doctors.ForEach(d =>
-            {
-                int? pastSchedulesNumber = null;
-                int? pastSchedulesWithPatientNumber = null;
-                int? futureScheduleNumber = null;
-                int? futureSchedulesWithPatientNumber = null;
-                DateTime upperBoundDate = dateTimeTo < DateTime.Now ? dateTimeTo : DateTime.Now;
-                DateTime lowerBoundDate = dateTimeFrom > DateTime.Now ? dateTimeFrom : DateTime.Now;
-                if (dateTimeFrom <= DateTime.Now)
-                {
-                    pastSchedulesNumber = _context.Schedule
-                        .Where(s => s.Doctor == d)
-                        .Where(s => s.Date <= upperBoundDate && dateTimeFrom <= s.Date)
-                        .Count();
-                    pastSchedulesWithPatientNumber = _context.Schedule
-                        .Where(s => s.Doctor == d)
-                        .Where(s => s.Date <= upperBoundDate && dateTimeFrom <= s.Date)
-                        .Where(s => s.Description != null && s.Patient != null)
-                        .Count();
-                }
-                
-                if (DateTime.Now <= dateTimeTo)
-                {
-                    futureScheduleNumber = _context.Schedule
-                            .Where(s => s.Doctor == d)
-                            .Where(s => lowerBoundDate < s.Date && s.Date <= dateTimeTo)
-                            .Count();
-                    futureSchedulesWithPatientNumber = _context.Schedule
-                            .Where(s => s.Doctor == d)
-                            .Where(s => lowerBoundDate < s.Date && s.Date <= dateTimeTo)
-                            .Where(s => s.Patient != null)
-                            .Count();
-                }
-                reportEntries.Add(new ReportEntry
-                {
-                    DoctorName = d.FirstName + " " + d.Surname,
-                    DoctorSpecialization = d.Specialization?.Name,
-                    PastSchedulesNumber = pastSchedulesNumber,
-                    PastSchedulesWithPatientNumber = pastSchedulesWithPatientNumber,
-                    FutureSchedulesNumber = futureScheduleNumber,
-                    FutureSchedulesWithPatientNumber = futureSchedulesWithPatientNumber,
-                }
-                );
-            });
-
-            return new ScheduleReportViewDTO
-            {
-                DateFrom = dateFrom,
-                DateTo = dateTo,
-                ReportEntries = reportEntries.OrderBy(re => re.DoctorSpecialization).ToList(),
-            };
-        }
-
-        //[HttpGet]
-        //public IActionResult AccessDenied()
+        //[HttpPost("[controller]/copyFromLastWeek")]
+        //[Authorize(Policy = "AdminOnly")]
+        //public async Task<ActionResult> CopyFromLastWeek(bool? dummy)
         //{
-        //    return View();
+        //    DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
+        //    DateTime endOfWeek = startOfWeek.AddDays(7);
+        //    DateTime endOfNextWeek = startOfWeek.AddDays(14);
+
+        //    var newSchedules = await _context.Schedule
+        //        .Include(s => s.Doctor)
+        //        .Include(s => s.Doctor.Specialization)
+        //        .Where(s => (startOfWeek <= s.Date && s.Date <= endOfWeek))
+        //        .OrderBy(s => s.Date).ToListAsync();
+
+
+        //    newSchedules.ForEach(el => { 
+        //        _context.Entry(el).State = EntityState.Detached;
+        //        el.Date = el.Date.AddDays(7); 
+        //        el.Id = 0;
+        //        el.Patient = null;
+        //        el.Description = null;
+        //    });
+
+        //    newSchedules.RemoveAll(el => {
+        //        if (el.Doctor != null && IsWithin15Minutes(el.Doctor, el.Date, null))
+        //        {
+        //            return true;
+        //        }
+        //        return false;
+        //    });
+
+
+        //    await _context.AddRangeAsync(newSchedules);
+        //    await _context.SaveChangesAsync();
+
+        //    //return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = startOfWeek, DateTo = endOfWeek});
+        //    return Ok();
+        //}
+
+        //[HttpGet("[controller]/generateReport")]
+        //[Authorize(Policy = "AdminOnly")]
+        //public async Task<ActionResult<ScheduleReportViewDTO>> GenerateReport(DateOnly dateFrom, DateOnly dateTo)
+        //{
+        //    var doctors = await _context.Employee.Include(d => d.Specialization).ToListAsync();
+        //    DateTime dateTimeFrom = dateFrom.ToDateTime(TimeOnly.MinValue);
+        //    DateTime dateTimeTo = dateTo.ToDateTime(TimeOnly.MinValue);
+
+
+        //    List<ReportEntry> reportEntries = new List<ReportEntry>();
+
+        //    if(dateTimeFrom >= dateTimeTo)
+        //    {
+        //        //TempData["WrongDates"] = true;
+        //        return BadRequest("Wrong dates");
+        //        //return View(new ScheduleReportViewModel { DateFrom=dateFrom, DateTo=dateTo, ReportEntries=reportEntries });
+        //    }
+
+        //    doctors.ForEach(d =>
+        //    {
+        //        int? pastSchedulesNumber = null;
+        //        int? pastSchedulesWithPatientNumber = null;
+        //        int? futureScheduleNumber = null;
+        //        int? futureSchedulesWithPatientNumber = null;
+        //        DateTime upperBoundDate = dateTimeTo < DateTime.Now ? dateTimeTo : DateTime.Now;
+        //        DateTime lowerBoundDate = dateTimeFrom > DateTime.Now ? dateTimeFrom : DateTime.Now;
+        //        if (dateTimeFrom <= DateTime.Now)
+        //        {
+        //            pastSchedulesNumber = _context.Schedule
+        //                .Where(s => s.Doctor == d)
+        //                .Where(s => s.Date <= upperBoundDate && dateTimeFrom <= s.Date)
+        //                .Count();
+        //            pastSchedulesWithPatientNumber = _context.Schedule
+        //                .Where(s => s.Doctor == d)
+        //                .Where(s => s.Date <= upperBoundDate && dateTimeFrom <= s.Date)
+        //                .Where(s => s.Description != null && s.Patient != null)
+        //                .Count();
+        //        }
+                
+        //        if (DateTime.Now <= dateTimeTo)
+        //        {
+        //            futureScheduleNumber = _context.Schedule
+        //                    .Where(s => s.Doctor == d)
+        //                    .Where(s => lowerBoundDate < s.Date && s.Date <= dateTimeTo)
+        //                    .Count();
+        //            futureSchedulesWithPatientNumber = _context.Schedule
+        //                    .Where(s => s.Doctor == d)
+        //                    .Where(s => lowerBoundDate < s.Date && s.Date <= dateTimeTo)
+        //                    .Where(s => s.Patient != null)
+        //                    .Count();
+        //        }
+        //        reportEntries.Add(new ReportEntry
+        //        {
+        //            DoctorName = d.FirstName + " " + d.Surname,
+        //            DoctorSpecialization = d.Specialization?.Name,
+        //            PastSchedulesNumber = pastSchedulesNumber,
+        //            PastSchedulesWithPatientNumber = pastSchedulesWithPatientNumber,
+        //            FutureSchedulesNumber = futureScheduleNumber,
+        //            FutureSchedulesWithPatientNumber = futureSchedulesWithPatientNumber,
+        //        }
+        //        );
+        //    });
+
+        //    return new ScheduleReportViewDTO
+        //    {
+        //        DateFrom = dateFrom,
+        //        DateTo = dateTo,
+        //        ReportEntries = reportEntries.OrderBy(re => re.DoctorSpecialization).ToList(),
+        //    };
         //}
 
         // GET: Schedules/Create
@@ -598,16 +592,16 @@ namespace MvcClinic.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("[controller]/book")]
         [Authorize(Policy = "PatientOnly")]
-        public async Task<ActionResult> Book(int id, Guid concurrencyStamp, DateTime? dateFrom, DateTime? dateTo, int? specialityId)
+        public async Task<ActionResult> Book([FromBody] ScheduleIdentifyDTO requestBody)
         {
-            var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == id);
+            var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Patient).FirstOrDefaultAsync(s => s.Id == requestBody.Id);
 
             if (schedule == null)
             {
                 return NotFound();
             }
 
-            if (schedule.ConcurrencyStamp != concurrencyStamp)
+            if (schedule.ConcurrencyStamp.ToString() != requestBody.ConcurrencyStamp)
             {
                 //TempData["ConcurrencyException"] = true;
                 //return RedirectToAction(nameof(Index), "Schedules", new { DateFrom = dateFrom, DateTo = dateTo, SpecialityId = specialityId });
@@ -636,12 +630,7 @@ namespace MvcClinic.Controllers
                 return Unauthorized();
             }
 
-            _context.Entry(schedule).OriginalValues["ConcurrencyStamp"] = concurrencyStamp;
-
-            if (specialityId == 0)
-            {
-                specialityId = null;
-            }
+            _context.Entry(schedule).OriginalValues["ConcurrencyStamp"] = requestBody.ConcurrencyStamp;
 
             if (ModelState.IsValid)
             {
@@ -659,55 +648,23 @@ namespace MvcClinic.Controllers
                     }
                     else
                     {
-                        //TempData["ConcurrencyExceptionPatient"] = true;
-                        //return RedirectToAction(nameof(Index), "Schedules", new { DateFrom = dateFrom, DateTo = dateTo, SpecialityId=specialityId });
-                        return BadRequest("Concurrency exception");
+                        return Conflict("Concurrency exception");
                     }
                 }
             }
             return Ok();
-            //return RedirectToAction(nameof(Index), "Schedules", new {DateFrom = dateFrom, DateTo=dateTo, SpecialityId=specialityId});
-        }
-
-        // GET: Schedules/Delete/5
-        [Authorize(Policy = "AdminOnly")]
-        [HttpGet("[controller]/delete")]
-        public async Task<ActionResult<Schedule>> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-
-            var schedule = await _context.Schedule.Include(s => s.Doctor).Include(s => s.Doctor.Specialization)
-                .Include(s => s.Patient).FirstOrDefaultAsync(m => m.Id == id);
-            if (schedule == null)
-            {
-                return NotFound();
-            }
-
-            //if (schedule.Date < DateTime.Now)
-            //{
-            //    //return RedirectToAction("Details", new {id = id});
-            //    return BadRequest("Deletion of past schedules not allowed");
-            //}
-
-            return schedule;
-            //return View(schedule);
         }
 
         // POST: Schedules/Delete/5
-        [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
         [HttpPost("[controller]/delete")]
-        public async Task<ActionResult> DeleteConfirmed(int id, Guid concurrencyStamp)
+        public async Task<ActionResult> DeleteConfirmed([FromBody] ScheduleIdentifyDTO requestBody)
         {
-            var schedule = await _context.Schedule.FindAsync(id);
+            var schedule = await _context.Schedule.FindAsync(requestBody.Id);
 
             if (schedule != null)
             {
-                _context.Entry(schedule).OriginalValues["ConcurrencyStamp"] = concurrencyStamp;
+                _context.Entry(schedule).OriginalValues["ConcurrencyStamp"] = new Guid(requestBody.ConcurrencyStamp);
                 if (schedule.Date < DateTime.Now)
                 {
                     return BadRequest("Can't delete past schedule");
@@ -721,19 +678,16 @@ namespace MvcClinic.Controllers
                 {
                     if (!ScheduleExists(schedule.Id))
                     {
-                        return BadRequest("Schedule doesn't exist");
-                        //TempData["ConcurrencyExceptionAlreadyDeleted"] = true;
+                        return NotFound("Schedule doesn't exist");
                     }
                     else
                     {
-                        return BadRequest("Concurrency exception");
-                        //TempData["ConcurrencyExceptionDelete"] = true; 
+                        return Conflict("Concurrency exception");
                     }
                 }
             }
 
             return Ok();
-            //return RedirectToAction(nameof(Index));
         }
 
         private bool ScheduleExists(int id)

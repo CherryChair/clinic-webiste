@@ -23,7 +23,7 @@ export default function ScheduleListElement({id, doctorName, patientName, date, 
     return (
         <tr className="bg-white hover:bg-gray-50 ">
             <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap ">
-                {date}
+                {date.replace("T", ", ")}
             </th>
             <td className="px-6 py-4">
                 {doctorName}

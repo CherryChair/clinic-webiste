@@ -93,6 +93,16 @@ namespace MvcClinic.Controllers
             //return await _context.Employee.Include(e => e.Specialization).OrderBy(e => e.Surname).ToListAsync();
         }
 
+        [HttpGet("[controller]/idList")]
+        public async Task<ActionResult<IEnumerable<EmployeeIdDTO>>> IdList()
+        {
+            var employees = from e in _context.Employee
+                            select new EmployeeIdDTO { Id = e.Id, Name = e.Specialization == null ? 
+                                e.FirstName + " " + e.Surname :
+                                e.FirstName + " " + e.Surname + " [" + e.Specialization.Name + "]"};
+            return await employees.ToListAsync();
+        }
+
         // GET: Employees/Details/5
         [HttpGet("[controller]")]
         public async Task<ActionResult<EmployeeDTO>> Details([FromQuery] string? id)
