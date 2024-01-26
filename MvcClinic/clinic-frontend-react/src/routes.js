@@ -22,11 +22,11 @@ function MyRoutes() {
                 <Route path="/home" element={<HomePage/>}/>
                 <Route
                     path="/login"
-                    element={<LoginPage/>}
+                    element={<RouteGuard notLoggedIn={true} component={LoginPage}/>}
                 />
                 <Route
                     path="/register"
-                    element={<RegisterPage/>}
+                    element={<RouteGuard notLoggedIn={true} component={RegisterPage}/>}
                 />
                 <Route
                     path="/employee/register"
