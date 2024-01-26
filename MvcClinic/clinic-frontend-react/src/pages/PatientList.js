@@ -68,7 +68,9 @@ export default function PatientListPage() {
                         concurrencyStamp={item.concurrencyStamp} 
                         setErrorFunc={setError}
                         onDelete={handleDelete}
-                        admin={admin}/>))
+                        admin={admin}
+                        key={item.id}
+                        />))
                     }
                 </tbody>
             </table>

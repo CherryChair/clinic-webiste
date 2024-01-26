@@ -72,6 +72,7 @@ export default function EmployeeListPage() {
                         concurrencyStamp={item.concurrencyStamp} 
                         setErrorFunc={setError}
                         onDelete={handleDelete}
+                        key={item.id}
                         />))
                     }
                 </tbody>
