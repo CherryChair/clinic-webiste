@@ -64,7 +64,7 @@ export default function PatientEditPage() {
             let tempPat = patient;
             tempPat.concurrencyStamp = response.data;
             setPatient(tempPat);
-            setSuccess("Saved patiend");
+            setSuccess("Saved patient");
         }).catch(err => {
             console.log(err);
             if (err.response.status === 409) {

@@ -153,6 +153,14 @@ namespace MvcClinic.Controllers
 
             patient.FirstName = patientDTO.FirstName;
             patient.Surname = patientDTO.Surname;
+            if(patient.Email != patientDTO.Email)
+            {
+                if (await _userManager.FindByEmailAsync(patientDTO.Email) != null)
+                {
+                    return BadRequest();
+                }
+            }
+            
             patient.Email = patientDTO.Email;
             patient.Active = patientDTO.Active;
             _context.Entry(patient).OriginalValues["ConcurrencyStamp"] = patientDTO.ConcurrencyStamp;

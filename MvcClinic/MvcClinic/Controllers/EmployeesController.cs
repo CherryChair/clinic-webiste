@@ -149,8 +149,14 @@ namespace MvcClinic.Controllers
 
             employee.FirstName = employeeDTO.FirstName;
             employee.Surname = employeeDTO.Surname;
+            if (employee.Email != employeeDTO.Email)
+            {
+                if (await _userManager.FindByEmailAsync(employeeDTO.Email) != null)
+                {
+                    return BadRequest();
+                }
+            }
             employee.Email = employeeDTO.Email;
-
             var speciality = await _context.Speciality.FirstOrDefaultAsync(s => s.Id == employeeDTO.SpecialityId);
             employee.Specialization = speciality;
 
