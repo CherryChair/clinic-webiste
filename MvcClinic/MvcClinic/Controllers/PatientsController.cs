@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using MvcClinic.Areas.Identity.Pages.Account;
 using MvcClinic.Data;
 using MvcClinic.DTOs;
 using MvcClinic.Models;
