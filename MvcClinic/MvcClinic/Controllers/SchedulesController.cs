@@ -36,9 +36,13 @@ namespace MvcClinic.Controllers
         }
 
         // GET: Schedules
-        [HttpGet("[controller]/index")]
-        public async Task<ActionResult<ScheduleListViewDTO>> Index(DateTime? DateFrom, DateTime? DateTo, int? SpecialityId)
+        [HttpGet("[controller]/list")]
+        public async Task<ActionResult<IEnumerable<ScheduleListDTO>>> List([FromQuery] DateTime? DateFrom, [FromQuery] DateTime? DateTo, [FromQuery] int? SpecialityId)
         {
+            Console.WriteLine("Date To");
+            Console.WriteLine(DateTo.ToString());
+            Console.WriteLine("Date From");
+            Console.WriteLine(DateFrom.ToString());
             bool isAdmin = false;
             bool isDoctor = false;
             bool isPatient = false;
@@ -70,7 +74,6 @@ namespace MvcClinic.Controllers
             if (!isAdmin && !isDoctor && !isPatient)
             {
                 return Unauthorized();
-                //return RedirectToAction("Index", "Home");
             }
 
             specialities = await _context.Speciality.ToListAsync();
@@ -82,7 +85,6 @@ namespace MvcClinic.Controllers
                 if(!patient!.Active)
                 {
                     return Unauthorized("Patient account not activated");
-                    //return RedirectToAction(nameof(AccessDenied));
                 }
                 schedules = await _context.Schedule.Include(s => s.Doctor)
                     .Include(s => s.Doctor.Specialization).Include(s => s.Patient)
@@ -112,67 +114,63 @@ namespace MvcClinic.Controllers
                     .OrderBy(s => s.Date).ToListAsync();
             }
 
-            return new ScheduleListViewDTO
-            {
-                isAdmin = isAdmin,
-                isDoctor = isDoctor,
-                isPatient = isPatient,
-                Schedules = schedules,
-                DateFrom = (DateTime)DateFrom,
-                DateTo = (DateTime)DateTo,
-                SpecialityId = SpecialityId,
-                Specalities = specialities
-            };
+            return Ok(schedules.Select(s => new ScheduleListDTO { 
+                Id = s.Id,
+                ConcurrencyStamp = s.ConcurrencyStamp,
+                Date = s.Date,
+                DoctorName = s.Doctor != null ? (s.Doctor.FirstName + " " + s.Doctor.Surname + " [" + s.Doctor.Specialization?.Name + "]" ): null,
+                PatientName = s.Patient != null ? (s.Patient.FirstName + " " + s.Patient.Surname) : null,
+            }));
         }
 
-        [HttpGet("[controller]/copyFromLastWeek")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<ActionResult<ScheduleCopyListViewDTO>> CopyFromLastWeek()
-        {
-            DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
-            DateTime endOfWeek = startOfWeek.AddDays(7);
-            DateTime endOfNextWeek = startOfWeek.AddDays(14);
+        //[HttpGet("[controller]/copyFromLastWeek")]
+        //[Authorize(Policy = "AdminOnly")]
+        //public async Task<ActionResult<ScheduleCopyListViewDTO>> CopyFromLastWeek()
+        //{
+        //    DateTime startOfWeek = DateTime.Today.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek) - (int)DayOfWeek.Monday) % 7));
+        //    DateTime endOfWeek = startOfWeek.AddDays(7);
+        //    DateTime endOfNextWeek = startOfWeek.AddDays(14);
 
-            var oldSchedules = await _context.Schedule.Include(s => s.Doctor)
-                .Include(s => s.Doctor.Specialization)
-                .Include(s => s.Patient)
-                .Where(s => (endOfWeek <= s.Date && s.Date <= endOfNextWeek))
-                .OrderBy(s => s.Date).ToListAsync();
+        //    var oldSchedules = await _context.Schedule.Include(s => s.Doctor)
+        //        .Include(s => s.Doctor.Specialization)
+        //        .Include(s => s.Patient)
+        //        .Where(s => (endOfWeek <= s.Date && s.Date <= endOfNextWeek))
+        //        .OrderBy(s => s.Date).ToListAsync();
 
-            var newSchedules = await _context.Schedule.Include(s => s.Doctor)
-                .Include(s => s.Doctor.Specialization)
-                .Where(s => (startOfWeek <= s.Date && s.Date <= endOfWeek))
-                .OrderBy(s => s.Date).ToListAsync();
+        //    var newSchedules = await _context.Schedule.Include(s => s.Doctor)
+        //        .Include(s => s.Doctor.Specialization)
+        //        .Where(s => (startOfWeek <= s.Date && s.Date <= endOfWeek))
+        //        .OrderBy(s => s.Date).ToListAsync();
 
-            newSchedules.ForEach(el => {
-                el.Date = el.Date.AddDays(7);
-                el.Patient = null;
-            });
+        //    newSchedules.ForEach(el => {
+        //        el.Date = el.Date.AddDays(7);
+        //        el.Patient = null;
+        //    });
 
-            List<Schedule> conflictingSchedlues = [];
+        //    List<Schedule> conflictingSchedlues = [];
 
-            newSchedules.RemoveAll(el => {
-                if (el.Doctor != null && IsWithin15Minutes(el.Doctor, el.Date, null))
-                {
-                    conflictingSchedlues.Add(el);
-                    return true;
-                }
-                return false;
-            });
+        //    newSchedules.RemoveAll(el => {
+        //        if (el.Doctor != null && IsWithin15Minutes(el.Doctor, el.Date, null))
+        //        {
+        //            conflictingSchedlues.Add(el);
+        //            return true;
+        //        }
+        //        return false;
+        //    });
 
-            var combinedSchedules = oldSchedules.Concat(newSchedules).OrderBy(el => el.Date).ToList();
+        //    var combinedSchedules = oldSchedules.Concat(newSchedules).OrderBy(el => el.Date).ToList();
 
 
-            return new ScheduleCopyListViewDTO
-            {
-                OldSchedules = oldSchedules,
-                NewSchedules = newSchedules,
-                CombinedSchedules = combinedSchedules,
-                ConflictingSchedules = conflictingSchedlues,
-                DateFrom = endOfWeek,
-                DateTo = endOfNextWeek
-            };
-        }
+        //    return new ScheduleCopyListViewDTO
+        //    {
+        //        OldSchedules = oldSchedules,
+        //        NewSchedules = newSchedules,
+        //        CombinedSchedules = combinedSchedules,
+        //        ConflictingSchedules = conflictingSchedlues,
+        //        DateFrom = endOfWeek,
+        //        DateTo = endOfNextWeek
+        //    };
+        //}
 
         [HttpPost("[controller]/copyFromLastWeek")]
         [Authorize(Policy = "AdminOnly")]
