@@ -9,7 +9,7 @@ const handleClick = () => {
 function Logout({className}) {
     return (
       <a
-        href="/"
+        href="/home"
         className={className}
         onClick={handleClick}
         >Logout</a>

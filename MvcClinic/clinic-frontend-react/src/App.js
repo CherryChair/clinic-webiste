@@ -14,18 +14,18 @@ const navigation = [
 ]
 
 const patientNavigation = [
-  { name: 'Schedules', href: '/schedlues' },
+  { name: 'Schedules', href: '/schedules' },
 ]
 
 const doctorNavigation = [
   { name: 'Patients', href: '/patients' },
-  { name: 'Schedules', href: '/schedlues' },
+  { name: 'Schedules', href: '/schedules' },
 ]
 
 const adminNavigation = [
   { name: 'Employees', href: '/employees' },
   { name: 'Patients', href: '/patients' },
-  { name: 'Schedules', href: '/schedlues' },
+  { name: 'Schedules', href: '/schedules' },
 ]
 
 function App() {
