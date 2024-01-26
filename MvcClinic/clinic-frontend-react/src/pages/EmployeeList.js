@@ -12,8 +12,8 @@ export default function EmployeeListPage() {
     const [errorMsg, setErrorMsg] = useState("");
 
     useEffect(() => {
-        getEmployees();
         getSpecialities();
+        getEmployees();
     }, []);    
     
     const getEmployees = () => {
@@ -68,7 +68,7 @@ export default function EmployeeListPage() {
                         firstName={item.firstName} 
                         surname={item.surname} 
                         email={item.email} 
-                        speciality={item.specialityId ? specialities.find(e => e.id === item.specialityId).name : ""}
+                        speciality={item.specialityId && specialities ? specialities.find(e => e.id === item.specialityId).name : ""}
                         concurrencyStamp={item.concurrencyStamp} 
                         setErrorFunc={setError}
                         onDelete={handleDelete}
