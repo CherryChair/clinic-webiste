@@ -1,0 +1,58 @@
+﻿@model MvcClinic.Models.ScheduleCreateOrEditViewModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+@if (TempData["Conflict"] != null)
+{
+    <h5 class="text-danger">Scheduling conflict.</h5>
+}
+
+<h4>Schedule</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Date" class="control-label"></label>
+                <input asp-for="Date" class="form-control"/>
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DoctorId" class="control-label"></label>
+                <select asp-for="DoctorId" class="form-control">
+                    <option></option>
+                    @foreach (var item in Model.Doctors!)
+                    {
+                        @if(item.Specialization != null)
+                        {
+                            <option value="@item.Id">@Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.Surname) [@Html.DisplayFor(modelItem => item.Specialization.Name)]</option>
+                        } else
+                        {
+                            <option value="@item.Id">@Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.Surname)</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <textarea asp-for="Description" type="text" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

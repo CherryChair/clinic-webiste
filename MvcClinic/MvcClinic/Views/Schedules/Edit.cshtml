@@ -1,0 +1,98 @@
+﻿@model MvcClinic.Models.ScheduleCreateOrEditViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+@if (TempData["Conflict"] != null)
+{
+    <h5 class="text-danger">Scheduling conflict.</h5>
+}
+@if (TempData["ConcurrencyException"] != null)
+{
+    <h5 class="text-danger">Someone else edited data.</h5>
+}
+
+<h4>Schedule</h4>
+<hr/>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Date" class="control-label"></label>
+                @if (DateTime.Now > Model.Date || (Model.IsDoctor != null && (bool)Model.IsDoctor))
+                {
+                    <input asp-for="Date" class="form-control" readonly/>
+                } else
+                {
+                    <input asp-for="Date" class="form-control" />
+                }
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DoctorId" class="control-label"></label>
+                @if (DateTime.Now > Model.Date || (Model.IsDoctor != null && (bool) Model.IsDoctor))
+                {
+                    var chosenDoctor = Model.Doctors.Find(d => d.Id == Model.DoctorId);
+                    <select asp-for="DoctorId" class="form-control" readonly>
+                        @if (chosenDoctor.Specialization != null)
+                        {
+                            <option value="@chosenDoctor.Id">@Html.DisplayFor(modelItem => chosenDoctor.FirstName) @Html.DisplayFor(modelItem => chosenDoctor.Surname) [@Html.DisplayFor(modelItem => chosenDoctor.Specialization.Name)]</option>
+                        }
+                        else
+                        {
+                            <option value="@chosenDoctor.Id">@Html.DisplayFor(modelItem => chosenDoctor.FirstName) @Html.DisplayFor(modelItem => chosenDoctor.Surname)</option>
+                        }
+                    </select>
+
+                } else
+                {
+                    <select asp-for="DoctorId" class="form-control">
+                        <option></option>
+                        @foreach (var item in Model.Doctors!)
+                        {
+                            @if (item.Specialization != null)
+                            {
+                                <option value="@item.Id">@Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.Surname) [@Html.DisplayFor(modelItem => item.Specialization.Name)]</option>
+                            }
+                            else
+                            {
+                                <option value="@item.Id">@Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.Surname)</option>
+                            }
+                        }
+                    </select>
+                }
+            </div>
+            @if (Model.Patient != null)
+            {
+                <div class="form-group">
+                    @Html.DisplayNameFor(modelItem => Model.Patient)
+                </div>
+                <div class="form-group">
+                    @Html.DisplayFor(modelItem => Model.Patient)
+                </div>
+            }
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <textarea asp-for="Description" type="text" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <input asp-for="ConcurrencyStamp" hidden />
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

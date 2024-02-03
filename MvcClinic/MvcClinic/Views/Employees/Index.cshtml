@@ -1,0 +1,71 @@
+﻿@model IEnumerable<MvcClinic.Models.Employee>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+@if (TempData["Success"] != null)
+{
+    <h5 class="text-success">Successfully added employee.</h5>
+}
+@if (TempData["ConcurrencyExceptionEmployeeDelete"] != null)
+{
+    <h5 class="text-danger">Employee you tried to delete has changed.</h5>
+}
+@if (TempData["ConcurrencyExceptionEmployeeAlreadyDeleted"] != null)
+{
+    <h5 class="text-danger">Employee was already deleted.</h5>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.FirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Surname)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Email)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Specialization)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+            @if (TempData["EmpId"] != null && TempData["EmpId"]!.ToString() == item.Id)
+        {
+                ViewData["TrClass"] = "bg-success bg-gradient text-white";
+                ViewData["ActionClass"] = "text-black";
+        } else
+        {
+                ViewData["TrClass"] = "";
+                ViewData["ActionClass"] = "";
+        }
+            <tr class="@ViewData["TrClass"]">
+            <td>
+                @Html.DisplayFor(modelItem => item.FirstName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Surname)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Specialization!.Name)                        
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="@ViewData["ActionClass"]">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id" class="@ViewData["ActionClass"]">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id" class="@ViewData["ActionClass"]">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

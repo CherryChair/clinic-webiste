@@ -1,0 +1,83 @@
+﻿@model MvcClinic.Models.ScheduleReportViewModel
+
+@{
+    ViewData["Title"] = "Report";
+}
+
+<h1>@ViewData["Title"]</h1>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+<form asp-controller="Schedules" asp-action="GenerateReport" method="get">
+    <p>
+        <label asp-for="DateFrom"></label>: <input asp-for="DateFrom" />
+        <label asp-for="DateTo"></label>: <input asp-for="DateTo" />
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+@if (TempData["WrongDates"] != null)
+{
+    <h5 class="text-danger">Wrong dates.</h5>
+}
+<h5>@Html.DisplayFor(model => model.DateFrom) - @Html.DisplayFor(model => model.DateTo)</h5>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ReportEntries[0]!.DoctorName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReportEntries[0]!.DoctorSpecialization)
+            </th>
+            @if(Model.DateFrom.ToDateTime(TimeOnly.MinValue) <= DateTime.Now)
+            {
+                <th>
+                    @Html.DisplayNameFor(model => model.ReportEntries[0]!.PastSchedulesNumber)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ReportEntries[0]!.PastSchedulesWithPatientNumber)
+                </th>
+            }
+            @if (DateTime.Now <= Model.DateTo.ToDateTime(TimeOnly.MinValue))
+            {
+                <th>
+                    @Html.DisplayNameFor(model => model.ReportEntries[0]!.FutureSchedulesNumber)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ReportEntries[0]!.FutureSchedulesWithPatientNumber)
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.ReportEntries)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DoctorName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DoctorSpecialization)
+                </td>
+                @if (Model.DateFrom.ToDateTime(TimeOnly.MinValue) <= DateTime.Now)
+                {
+                    <td>
+                        @(item.PastSchedulesNumber * 15 / 60)h @(item.PastSchedulesNumber * 15 % 60)m
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PastSchedulesWithPatientNumber)
+                    </td>
+                }
+                @if (DateTime.Now <= Model.DateTo.ToDateTime(TimeOnly.MinValue))
+                {
+                    <td>
+                        @(item.FutureSchedulesNumber * 15 / 60)h @(item.FutureSchedulesNumber * 15 % 60)m
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.FutureSchedulesWithPatientNumber)
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>

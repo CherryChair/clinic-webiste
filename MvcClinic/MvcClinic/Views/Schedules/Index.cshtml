@@ -1,0 +1,175 @@
+﻿@model MvcClinic.Models.ScheduleListViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+
+
+<h1>Index</h1>
+
+@if (TempData["ConcurrencyExceptionPatient"] != null)
+{
+    <h5 class="text-danger">Schedule you tried to book has changed.</h5>
+}
+@if (TempData["ConcurrencyExceptionDelete"] != null)
+{
+    <h5 class="text-danger">Schedule you tried to delete has changed.</h5>
+}
+@if (TempData["ConcurrencyExceptionAlreadyDeleted"] != null)
+{
+    <h5 class="text-danger">Schedule was already deleted.</h5>
+}
+
+@if (Model.isAdmin)
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Create New</a>
+        <a asp-action="CopyFromLastWeek" class="btn btn-primary mx-lg-1">Copy Schedule From Last Week</a>
+        <form asp-controller="Schedules" asp-action="GenerateReport" method="get">
+            <p>
+                <input type="hidden" name="dateFrom" value="@Model.DateFrom.ToString("MM-dd-yyyy")" />
+                <input type="hidden" name="dateTo" value="@Model.DateTo.ToString("MM-dd-yyyy")" />
+
+
+                <input type="submit" value="Generate Report" class="btn btn-primary" />
+            </p>
+        </form>
+    </p>
+}
+<form asp-controller="Schedules" asp-action="Index" method="get">
+    <p>
+        <label asp-for="DateFrom"></label>: <input asp-for="DateFrom" />
+        <label asp-for="DateTo"></label>: <input asp-for="DateTo" />
+        @if (Model.isAdmin || Model.isPatient)
+        {
+            <label asp-for="SpecialityId"></label><text>:</text>
+            <select asp-for="SpecialityId">
+                <option></option>
+                @foreach (var item in Model.Specalities!)
+                {
+                    <option value="@item.Id">@Html.DisplayFor(modelItem => item.Name)</option>
+                }
+            </select>
+        }
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+@if (TempData["WrongDates"] != null)
+{
+    <h5 class="text-danger">Wrong dates.</h5>
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedules[0]!.Date)
+            </th>
+            @if (Model.isAdmin || Model.isPatient)
+            {
+                <th>
+                    @Html.DisplayNameFor(model => model.Schedules[0]!.Doctor)
+                </th>
+            }
+            @if (Model.isDoctor || Model.isAdmin)
+            {
+                <th>
+                    @Html.DisplayNameFor(model => model.Schedules[0]!.Patient)
+                </th>
+            }
+            @if (Model.isPatient)
+            {
+                <th>
+                    Booked
+                </th>
+            }
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Schedules!)
+        {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Date)-@item.Date.AddMinutes(15).ToShortTimeString()
+            </td>
+            @if (Model.isPatient || Model.isAdmin)
+            {
+                <td>
+                        @if (item.Doctor != null && item.Doctor.Specialization != null)
+                    {
+                            <text>@Html.DisplayFor(modelItem => item.Doctor.FirstName) @Html.DisplayFor(modelItem => item.Doctor.Surname) [@Html.DisplayFor(modelItem => item.Doctor.Specialization.Name)]</text>
+                    }
+                    else
+                    {
+                            <text>@Html.DisplayFor(modelItem => item.Doctor!.FirstName) @Html.DisplayFor(modelItem => item.Doctor!.Surname)</text>
+                    }
+                </td>
+            }
+            @if (Model.isDoctor || Model.isAdmin)
+            {
+                @if (item.Patient != null)
+                {
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Patient!.FirstName) @Html.DisplayFor(modelItem => item.Patient!.Surname) [@Html.DisplayFor(modelItem => item.Patient!.Email)]
+                    </td>
+                } else
+                {
+                    <td></td>  
+                }
+            }
+            @if (Model.isPatient)
+            {
+                @if (item.Patient == null)
+                {
+                    <td>&#10060;</td>
+                }
+                else
+                {
+                    <td>&#10004;</td>
+                }
+            }
+            <td>
+                @if (Model.isAdmin || Model.isDoctor)
+                {
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> <text>|</text>
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+
+                }
+                @if (Model.isPatient)
+                {
+                    @if(item.Date >= DateTime.Now)
+                    {
+                        <form asp-controller="Schedules" asp-action="Book" asp-route-id="@item.Id" method="post">
+                            <p>
+                                <input type="hidden" name="dateFrom" value="@Model.DateFrom" />
+                                <input type="hidden" name="dateTo" value="@Model.DateTo" />
+                                <input type="hidden" name="specialityId" value="@Model.SpecialityId" />
+                                <input type="hidden" name="concurrencyStamp" value="@item.ConcurrencyStamp" />
+
+                                @if(item.Patient == null){
+                                    <input type="submit" value="Book" class="btn btn-primary" />
+                                } else
+                                {
+                                    <input type="submit" value="Cancel" class="btn btn-danger" />
+                                }
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary">Details</a>
+                            </p>
+                        </form>
+                    }
+                    else
+                    {
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary">Details</a>
+                    }
+
+                }
+                @if (Model.isAdmin && item.Date >= DateTime.Now)
+                {
+                    <text>|</text>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

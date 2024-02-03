@@ -1,0 +1,32 @@
+﻿@model MvcClinic.Models.ScheduleCopyListViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<form asp-action="CopyFromLastWeek" method="post">
+    <input type="submit" value="Confirm" class="btn btn-primary" />
+    <a asp-action="Index" class="btn btn-danger">Back to List</a>
+</form>
+
+<h1>New Schedule</h1>
+<h5>@Html.DisplayFor(model => model.DateFrom) - @Html.DisplayFor(model => model.DateTo)</h5>
+@await Html.PartialAsync("~/Views/Shared/_ScheduleListPartial.cshtml", Model.CombinedSchedules)
+
+
+<h1>Automatically added items</h1>
+
+@await Html.PartialAsync("~/Views/Shared/_ScheduleListPartial.cshtml", Model.NewSchedules)
+
+@if (Model.ConflictingSchedules.Any())
+{
+    <h1>Conflicting items</h1>
+    <h2 class="text-danger">Won't be added </h2>
+    
+    @await Html.PartialAsync("~/Views/Shared/_ScheduleListPartial.cshtml", Model.ConflictingSchedules)
+}
+
+
+<h1>Old items</h1>
+
+@await Html.PartialAsync("~/Views/Shared/_ScheduleListPartial.cshtml", Model.OldSchedules)
